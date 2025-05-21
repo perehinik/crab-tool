@@ -3,25 +3,30 @@
 #include <QPushButton>
 
 FileManagerDir::FileManagerDir(QWidget *parent) : QWidget(parent) {
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    setMinimumWidth(180);
-
-    mainWidget = new QWidget(this);
-    mainLayout = new QGridLayout(mainWidget);
+    mainLayout = new QGridLayout();
     mainLayout->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(10);
-    mainWidget->setLayout(mainLayout);
-    mainWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    setLayout(mainLayout);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
-    QWidget *controlWidget = new QWidget(mainWidget);
-    QGridLayout *controlLayout = new QGridLayout(controlWidget);
+    controlWidget = new QWidget(this);
+    controlLayout = new QGridLayout();
     controlWidget->setLayout(controlLayout);
+    controlWidget->setMinimumSize(QSize(150, 40));
+    controlWidget->setStyleSheet(
+        "  border: none;"
+        "  padding: 0px;"
+        "  margin: 0px;"
+        "  background: lightgrey;"
+        );
+    controlWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
-    QPushButton *minimiseButton = new QPushButton();
-    minimiseButton->setIcon(QIcon("/home/ivan/proj/CrabTool/icon/folder-open-fill.png"));
-    minimiseButton->setIconSize(QSize(32, 32)); // Set desired icon size
-    minimiseButton->setFixedSize(32, 32);       // Match button size to icon
+    minimiseButton = new QPushButton();
+    minimiseButton->setIcon(QIcon("/home/ivan/proj/crab-tool/icon/folder-open-fill.png"));
+    minimiseButton->setIconSize(QSize(24, 24)); // Set desired icon size
+    minimiseButton->setFixedSize(24, 24);       // Match button size to icon
+    QObject::connect(minimiseButton, &QPushButton::released, this, &FileManagerDir::onFolderClick);
 
     // Remove text, padding, and margins
     minimiseButton->setText("");
@@ -34,10 +39,16 @@ FileManagerDir::FileManagerDir(QWidget *parent) : QWidget(parent) {
         "}"
         );
 
-    QLabel *dirPathLabel = new QLabel("/path/to/dir", controlWidget);
+    QLabel *dirPathLabel = new QLabel("/very/verylong/path/to/dir", controlWidget);
+    dirPathLabel->setFixedHeight(24);
+    dirPathLabel->setWordWrap(true);
+    dirPathLabel->setAlignment(Qt::AlignVCenter);
 
-    controlLayout->addWidget(minimiseButton);
-    controlLayout->addWidget(dirPathLabel);
+    controlLayout->addWidget(minimiseButton, 0, 0);
+    controlLayout->addWidget(dirPathLabel, 0, 1);
+    controlLayout->setAlignment(Qt::AlignVCenter);
+    controlLayout->setContentsMargins(5, 0, 0, 0);
+    controlLayout->setSpacing(5);
 
     containerWidget = new QWidget(this);
     containerLayout = new QGridLayout(containerWidget);
@@ -48,8 +59,10 @@ FileManagerDir::FileManagerDir(QWidget *parent) : QWidget(parent) {
 
     updateItems();
 
+    containerWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
     mainLayout->addWidget(controlWidget, 0, 0);
-    mainLayout->addWidget(controlWidget, 1, 0);
+    mainLayout->addWidget(containerWidget, 1, 0);
 }
 
 void FileManagerDir::updateItems() {
@@ -93,7 +106,7 @@ void FileManagerDir::updateItems() {
     };
     fileList.sort();
     buttonList.resize(fileList.length());
-    for (int i=0; i < fileList.length(); i++) {
+    for (int i = 0; i < fileList.length(); i++) {
         buttonList[i] = new ImgButtonWidget(fileList[i], containerWidget);
         containerLayout->addWidget(buttonList[i], i, 0);
         QObject::connect(buttonList[i], &ImgButtonWidget::onImageButtonClicked, this, &FileManagerDir::onButtonPressed);
@@ -102,17 +115,18 @@ void FileManagerDir::updateItems() {
 
 void FileManagerDir::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
+}
 
-    for (int i=0; i < buttonList.length(); i++) {
-        qreal buttonWidth = buttonList[i]->width();
-        qreal buttonHeight = buttonList[i]->height();
-        qreal maxSize = std::max(buttonWidth, buttonHeight);
-        qreal scalingFactor = width() / maxSize;
-        buttonList[i]->resize(buttonWidth / scalingFactor, buttonHeight / scalingFactor);
+void FileManagerDir::onFolderClick() {
+    if (containerWidget->isHidden()) {
+        containerWidget->show();
+        minimiseButton->setIcon(QIcon("/home/ivan/proj/crab-tool/icon/folder-open-fill.png"));
+    } else {
+        containerWidget->hide();
+        minimiseButton->setIcon(QIcon("/home/ivan/proj/crab-tool/icon/folder-fill.png"));
     }
 }
 
-void FileManagerDir::onButtonPressed(QString imagePath)
-{
+void FileManagerDir::onButtonPressed(QString imagePath) {
     emit onImageButtonClicked(imagePath);
 }

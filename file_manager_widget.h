@@ -4,7 +4,6 @@
 #include <QWidget>
 #include <QScrollArea>
 #include <QGridLayout>
-#include "image_button_widget.h"
 
 class FileManager : public QWidget {
     Q_OBJECT
@@ -14,7 +13,7 @@ private:
     QWidget *containerWidget;
     QGridLayout *containerLayout;
     QList<QString> fileList;
-    QList<ImgButtonWidget*> buttonList;
+    QList<QWidget*> buttonList;
     void onButtonPressed(QString imagePath);
 
 public:

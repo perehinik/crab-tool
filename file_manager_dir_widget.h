@@ -4,19 +4,23 @@
 #include <QWidget>
 #include <QScrollArea>
 #include <QGridLayout>
+#include <QPushButton>
 #include "image_button_widget.h"
 
 class FileManagerDir : public QWidget {
     Q_OBJECT
 
 private:
-    QWidget *mainWidget;
     QGridLayout *mainLayout;
+    QWidget *controlWidget;
+    QGridLayout *controlLayout;
+    QPushButton *minimiseButton;
     QWidget *containerWidget;
     QGridLayout *containerLayout;
     QList<QString> fileList;
     QList<ImgButtonWidget*> buttonList;
     void onButtonPressed(QString imagePath);
+    void onFolderClick();
 
 public:
     explicit FileManagerDir(QWidget *parent = nullptr);

@@ -8,15 +8,11 @@
 ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(parent)
 {
     scene = new QGraphicsScene(this);
-
     setScene(scene);
     setRenderHint(QPainter::Antialiasing);
     setRenderHint(QPainter::SmoothPixmapTransform);
-
     setDragMode(QGraphicsView::NoDrag);
-
     setImage(imagePath);
-
     setStyleSheet("border-width: 0px; border-style: solid");
 }
 
@@ -152,7 +148,6 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *event)
 void ImageWidget::updateRect()
 {
     qreal scale = 1 / transform().m11();
-    // qDebug() << "Scale: " << scale;
     for (int i = 0; i < rectangleList.size(); ++i) {
         rectangleList[i]->setScale(scale);
     }

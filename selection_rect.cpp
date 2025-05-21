@@ -24,8 +24,6 @@ SelectionRect::SelectionRect(QGraphicsScene *scene, const QRectF rect, qreal sca
         QGraphicsEllipseItem *ellipse = scene->addEllipse(circleRect, circlePen, circleBrush);
         ellipses.append(ellipse);
     }
-    // startPos = mapToScene(event->pos());
-    // currentRect = scene->addRect(QRectF(startPos, startPos), rectanglePen);
 }
 
 void SelectionRect::removeFromScene(QGraphicsScene *scene)
