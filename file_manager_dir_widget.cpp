@@ -1,8 +1,10 @@
 #include "file_manager_dir_widget.h"
 #include "image_button_widget.h"
 #include <QPushButton>
+#include <QDirIterator>
 
-FileManagerDir::FileManagerDir(QWidget *parent) : QWidget(parent) {
+FileManagerDir::FileManagerDir(QString dirPath, QWidget *parent) : QWidget(parent) {
+    this->dirPath = dirPath;
     mainLayout = new QGridLayout();
     mainLayout->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
     mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -39,7 +41,7 @@ FileManagerDir::FileManagerDir(QWidget *parent) : QWidget(parent) {
         "}"
         );
 
-    QLabel *dirPathLabel = new QLabel("/very/verylong/path/to/dir", controlWidget);
+    QLabel *dirPathLabel = new QLabel(dirPath, controlWidget);
     dirPathLabel->setFixedHeight(24);
     dirPathLabel->setWordWrap(true);
     dirPathLabel->setAlignment(Qt::AlignVCenter);
@@ -66,50 +68,16 @@ FileManagerDir::FileManagerDir(QWidget *parent) : QWidget(parent) {
 }
 
 void FileManagerDir::updateItems() {
-    fileList = {
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00015.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00039.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00015.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00039.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00015.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00039.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00015.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00039.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00015.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00039.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00015.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00039.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00015.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00039.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00015.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00039.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00015.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00039.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00015.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00039.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00015.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00039.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00015.jpg",
-        "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-59-36/capture_00039.jpg",
-    };
-    fileList.sort();
-    buttonList.resize(fileList.length());
-    for (int i = 0; i < fileList.length(); i++) {
-        buttonList[i] = new ImgButtonWidget(fileList[i], containerWidget);
-        containerLayout->addWidget(buttonList[i], i, 0);
-        QObject::connect(buttonList[i], &ImgButtonWidget::onImageButtonClicked, this, &FileManagerDir::onButtonPressed);
+    int i = 0;
+    QDirIterator it(dirPath, QStringList() << "*.jpg" << "*.png", QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        QString filePath = it.next();
+        ImgButtonWidget *btn = new ImgButtonWidget(filePath, containerWidget);
+        buttonList.append(btn);
+        containerLayout->addWidget(btn, i, 0);
+        QObject::connect(btn, &ImgButtonWidget::onImageButtonClicked, this, &FileManagerDir::onButtonPressed);
+        i++;
+        if (i >= 100) {break;}
     }
 }
 

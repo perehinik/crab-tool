@@ -11,6 +11,7 @@ class FileManagerDir : public QWidget {
     Q_OBJECT
 
 private:
+    QString dirPath;
     QGridLayout *mainLayout;
     QWidget *controlWidget;
     QGridLayout *controlLayout;
@@ -23,7 +24,7 @@ private:
     void onFolderClick();
 
 public:
-    explicit FileManagerDir(QWidget *parent = nullptr);
+    explicit FileManagerDir(QString dirPath, QWidget *parent = nullptr);
     void resizeEvent(QResizeEvent *event);
     void updateItems();
 

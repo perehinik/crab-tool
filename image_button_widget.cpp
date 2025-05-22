@@ -2,29 +2,16 @@
 #include <QFileInfo>
 #include <QImageReader>
 #include <QEvent>
+#include <QtConcurrent>
 
 ImgButtonWidget::ImgButtonWidget(QString imagePath, QWidget *parent) : QWidget(parent) {
     this->imagePath = imagePath;
     QFileInfo fileInfo(imagePath);
-    QString fileName = fileInfo.fileName();
-    nameLabel = new QLabel(fileName, this);
+    nameLabel = new QLabel(fileInfo.fileName(), this);
 
-    QImageReader reader(imagePath);
-    QSizeF size = reader.size();
-    imageScale = size.height() / size.width();
-
-    // Load the image
-    pixmap = QPixmap(imagePath);
-
-    qreal maxSize = std::max(pixmap.height(), pixmap.width());
-    qreal scalingFactor = maxSize / 250;
-    pixmap = pixmap.scaled(QSize(pixmap.width() / scalingFactor, pixmap.height() / scalingFactor),
-                           Qt::KeepAspectRatio, Qt::SmoothTransformation);
     backgroundLabel = new QLabel(this);
-    backgroundLabel->setPixmap(pixmap.scaled(QSize(100, 100*imageScale), Qt::KeepAspectRatio, Qt::SmoothTransformation));
     backgroundLabel->setAlignment(Qt::AlignCenter);
-
-    updateBackground();
+    backgroundLabel->setFixedSize(100, 100);
 
     QGridLayout *layout_w = new QGridLayout(this);
     layout_w->addWidget(backgroundLabel, 0, 0);
@@ -35,9 +22,35 @@ ImgButtonWidget::ImgButtonWidget(QString imagePath, QWidget *parent) : QWidget(p
     nameLabel->setAlignment(Qt::AlignCenter);
     setLayout(layout_w);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    loadImage();
+}
+
+void ImgButtonWidget::loadImage() {
+    QtConcurrent::run([=]() {
+        QImageReader reader(imagePath);
+        QSizeF size = reader.size();
+        imageScale = size.height() / size.width();
+
+        // Load the image
+        QPixmap pixmap = QPixmap(imagePath);
+
+        qreal maxSize = std::max(pixmap.height(), pixmap.width());
+        qreal scalingFactor = maxSize / 250;
+        pixmap = pixmap.scaled(QSize(pixmap.width() / scalingFactor, pixmap.height() / scalingFactor),
+                               Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+        QMetaObject::invokeMethod(this, [=]() {
+                this->pixmap = pixmap;
+                this->updateBackground();
+            }, Qt::QueuedConnection);
+    });
 }
 
 void ImgButtonWidget::updateBackground() {
+    if (!pixmap) {
+        return;
+    }
     qreal parentWidth = parentWidget() ? parentWidget()->width() : width();
 
     qreal newWidth = parentWidth * 0.8;

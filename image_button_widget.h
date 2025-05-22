@@ -18,6 +18,7 @@ private:
     QString imagePath;
     qreal previousWidth = 0;
     qreal imageScale = 1;
+    void loadImage();
     void updateBackground();
     void resizeEvent(QResizeEvent *event);
     void mousePressEvent(QMouseEvent *event);

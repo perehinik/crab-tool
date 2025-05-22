@@ -1,5 +1,6 @@
 #include "file_manager_widget.h"
 #include "file_manager_dir_widget.h"
+#include <QDirIterator>
 
 FileManager::FileManager(QWidget *parent) : QWidget(parent) {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -30,11 +31,16 @@ FileManager::FileManager(QWidget *parent) : QWidget(parent) {
 }
 
 void FileManager::updateItems() {
-    FileManagerDir *fileManagerDir = new FileManagerDir(containerWidget);
-    containerLayout->addWidget(fileManagerDir, 0, 0);
-    QObject::connect(fileManagerDir, &FileManagerDir::onImageButtonClicked, this, &FileManager::onButtonPressed);
-    buttonList.resize(1);
-    buttonList[0] = fileManagerDir;
+    int i = 0;
+    QDirIterator it("/home/ivan/proj/TrainingData/RAW/", QDir::Dirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        QString subdirPath = it.next();
+        FileManagerDir *fileManagerDir = new FileManagerDir(subdirPath, containerWidget);
+        containerLayout->addWidget(fileManagerDir, i, 0);
+        QObject::connect(fileManagerDir, &FileManagerDir::onImageButtonClicked, this, &FileManager::onButtonPressed);
+        buttonList.append(fileManagerDir);
+        i++;
+    }
 }
 
 void FileManager::resizeEvent(QResizeEvent *event) {
