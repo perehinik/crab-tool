@@ -28,23 +28,31 @@ ImgButtonWidget::ImgButtonWidget(QString imagePath, QWidget *parent) : QWidget(p
 
 void ImgButtonWidget::loadImage() {
     QThreadPool::globalInstance()->start([=]() {
+        // First load scaled image with fast transformation
+        // Resolution should be a bit better than one that will be finally used
         QImageReader reader(imagePath);
         QSizeF size = reader.size();
         imageScale = size.height() / size.width();
 
-        // Load the image
-        QPixmap pixmap = QPixmap(imagePath);
+        qreal maxOrigSize = std::max(size.height(), size.width());
+        qreal resizeOrigFactor = maxOrigSize / (PIXMAP_MAX_SIDE_SIZE * 2);
+        if (resizeOrigFactor < 1) { resizeOrigFactor = 1; }
+
+        reader.setScaledSize(QSize(size.width() / resizeOrigFactor, size.height() / resizeOrigFactor));  // Load directly as 64×64 image
+        QImage lowResImage = reader.read();
+        QPixmap pixmap = QPixmap::fromImage(lowResImage);
         if (!pixmap) {
             QMetaObject::invokeMethod(this, [=]() {
                 this->nameLabel->setText("");
                 this->setFixedSize(0, 0);
             }, Qt::QueuedConnection);
         }
-        qreal maxSize = std::max(pixmap.height(), pixmap.width());
-        qreal scalingFactor = maxSize / 250;
-        pixmap = pixmap.scaled(QSize(pixmap.width() / scalingFactor, pixmap.height() / scalingFactor),
-                               Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
+        // Rescale image with smooth transform
+        qreal maxSize = std::max(pixmap.height(), pixmap.width());
+        qreal resizeFactor = maxSize / PIXMAP_MAX_SIDE_SIZE;
+        pixmap = pixmap.scaled(QSize(pixmap.width() / resizeFactor, pixmap.height() / resizeFactor),
+                               Qt::KeepAspectRatio, Qt::SmoothTransformation);
         QMetaObject::invokeMethod(this, [=]() {
                 this->pixmap = pixmap;
                 this->updateBackground();
@@ -71,7 +79,7 @@ void ImgButtonWidget::updateBackground() {
     if (!pixmap.isNull()) {
         backgroundLabel->setPixmap(pixmap.scaled(QSize(newWidth, newHeight),
                                                  Qt::KeepAspectRatio,
-                                                 Qt::SmoothTransformation));
+                                                 Qt::FastTransformation));
     }
     backgroundLabel->setFixedSize(QSize(newWidth, newHeight));
 }

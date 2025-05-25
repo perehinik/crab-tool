@@ -75,14 +75,15 @@ void FileManagerDir::updateItems() {
     }
 
     fileList.sort();
-
+    setUpdatesEnabled(false);
     for (int i = 0; i < fileList.length(); i++) {
         ImgButtonWidget *btn = new ImgButtonWidget(fileList[i], containerWidget);
         buttonList.append(btn);
         containerLayout->addWidget(btn, i, 0);
         QObject::connect(btn, &ImgButtonWidget::onImageButtonClicked, this, &FileManagerDir::onButtonPressed);
-        if (i >= 100) {break;}
+        // if (i >= 100) {break;}
     }
+    setUpdatesEnabled(true);
 }
 
 void FileManagerDir::resizeEvent(QResizeEvent *event) {

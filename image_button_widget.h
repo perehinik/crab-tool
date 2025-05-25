@@ -5,6 +5,8 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
+#define PIXMAP_MAX_SIDE_SIZE 250
+
 class ImgButtonWidget : public QWidget {
     Q_OBJECT
 

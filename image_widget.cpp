@@ -24,7 +24,7 @@ void ImageWidget::setImage(QString imagePath) {
     pixmap = QPixmap(imagePath);
     if (!pixmap.isNull()) {
         imageItem = scene->addPixmap(pixmap);
-        imageItem->setTransformationMode(Qt::SmoothTransformation);
+        // imageItem->setTransformationMode(Qt::SmoothTransformation);
         imageItem->setPos(0, 0);
         scene->setSceneRect(pixmap.rect());
     }
@@ -37,6 +37,14 @@ void ImageWidget::checkZoom() {
     // Prevent zooming out beyond full-scene view
     QRectF viewBounds = mapToScene(viewport()->rect()).boundingRect();
     QRectF sceneBounds = scene->sceneRect();
+
+    if (sceneBounds.width() <= viewBounds.width() * 3) {
+        // Use better transformation for zoomed out to get better image
+        imageItem->setTransformationMode(Qt::SmoothTransformation);
+    } else {
+        // Use fast for zoomed image so pixels are visible
+        imageItem->setTransformationMode(Qt::FastTransformation);
+    }
 
     if (viewBounds.contains(sceneBounds)) {
         setResized(false);
