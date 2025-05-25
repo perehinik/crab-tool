@@ -68,15 +68,19 @@ FileManagerDir::FileManagerDir(QString dirPath, QWidget *parent) : QWidget(paren
 }
 
 void FileManagerDir::updateItems() {
-    int i = 0;
+    QStringList fileList;
     QDirIterator it(dirPath, QStringList() << "*.jpg" << "*.png", QDir::Files, QDirIterator::Subdirectories);
     while (it.hasNext()) {
-        QString filePath = it.next();
-        ImgButtonWidget *btn = new ImgButtonWidget(filePath, containerWidget);
+        fileList << it.next();
+    }
+
+    fileList.sort();
+
+    for (int i = 0; i < fileList.length(); i++) {
+        ImgButtonWidget *btn = new ImgButtonWidget(fileList[i], containerWidget);
         buttonList.append(btn);
         containerLayout->addWidget(btn, i, 0);
         QObject::connect(btn, &ImgButtonWidget::onImageButtonClicked, this, &FileManagerDir::onButtonPressed);
-        i++;
         if (i >= 100) {break;}
     }
 }

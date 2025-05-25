@@ -5,15 +5,15 @@
 #include <QGraphicsEllipseItem>
 #include <QDebug>
 
-ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(parent)
-{
+ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(parent) {
     scene = new QGraphicsScene(this);
     setScene(scene);
     setRenderHint(QPainter::Antialiasing);
     setRenderHint(QPainter::SmoothPixmapTransform);
     setDragMode(QGraphicsView::NoDrag);
     setImage(imagePath);
-    setStyleSheet("border-width: 0px; border-style: solid");
+
+    setStyleSheet("border: 0px solid grey;");
 }
 
 void ImageWidget::setImage(QString imagePath) {
@@ -30,8 +30,7 @@ void ImageWidget::setImage(QString imagePath) {
     }
 }
 
-void ImageWidget::checkZoom()
-{
+void ImageWidget::checkZoom() {
     if (!scene) {
         return;
     }
@@ -44,8 +43,7 @@ void ImageWidget::checkZoom()
     }
 }
 
-void ImageWidget::setResized(bool isResized)
-{
+void ImageWidget::setResized(bool isResized) {
     if (isResized) {
         this->resized = true;
         setDragMode(QGraphicsView::ScrollHandDrag);
@@ -57,8 +55,7 @@ void ImageWidget::setResized(bool isResized)
     }
 }
 
-void ImageWidget::resizeEvent(QResizeEvent *event)
-{
+void ImageWidget::resizeEvent(QResizeEvent *event) {
     QGraphicsView::resizeEvent(event);
     if (scene && scene->sceneRect().isValid() && !resized) {
         setResized(false);
@@ -67,8 +64,7 @@ void ImageWidget::resizeEvent(QResizeEvent *event)
     updateRect();
 }
 
-void ImageWidget::wheelEvent(QWheelEvent *event)
-{
+void ImageWidget::wheelEvent(QWheelEvent *event) {
     // Get position in scene coordinates under cursor
     QPointF cursorScenePos = mapToScene(event->position().toPoint());
 
@@ -97,8 +93,7 @@ void ImageWidget::wheelEvent(QWheelEvent *event)
     updateRect();
 }
 
-void ImageWidget::mousePressEvent(QMouseEvent *event)
-{
+void ImageWidget::mousePressEvent(QMouseEvent *event) {
     QPointF mousePos = mapToScene(event->pos());
     if (event->button() == Qt::LeftButton) {
         activateRectByPoint(mousePos);
@@ -110,8 +105,7 @@ void ImageWidget::mousePressEvent(QMouseEvent *event)
     QGraphicsView::mousePressEvent(event);
 }
 
-void ImageWidget::mouseMoveEvent(QMouseEvent *event)
-{
+void ImageWidget::mouseMoveEvent(QMouseEvent *event) {
     if (currentRect) {
         QPointF currentPos = mapToScene(event->pos());
         QSize imageSize = imageItem->pixmap().size();
@@ -129,8 +123,7 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event)
     QGraphicsView::mouseMoveEvent(event);
 }
 
-void ImageWidget::mouseReleaseEvent(QMouseEvent *event)
-{
+void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton && currentRect) {
         // ToDo: Check if rect is too small to add
         if (!rectangleList.contains(currentRect) ) {
@@ -145,16 +138,14 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *event)
     QGraphicsView::mouseReleaseEvent(event);
 }
 
-void ImageWidget::updateRect()
-{
+void ImageWidget::updateRect() {
     qreal scale = 1 / transform().m11();
     for (int i = 0; i < rectangleList.size(); ++i) {
         rectangleList[i]->setScale(scale);
     }
 }
 
-int ImageWidget::activateRectByPoint(QPointF point)
-{
+int ImageWidget::activateRectByPoint(QPointF point) {
     QPointF *preActivatedPoint = nullptr;
     qreal distance = 9999;
 

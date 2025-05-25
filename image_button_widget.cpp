@@ -2,7 +2,7 @@
 #include <QFileInfo>
 #include <QImageReader>
 #include <QEvent>
-#include <QtConcurrent>
+#include <QThreadPool>
 
 ImgButtonWidget::ImgButtonWidget(QString imagePath, QWidget *parent) : QWidget(parent) {
     this->imagePath = imagePath;
@@ -27,14 +27,19 @@ ImgButtonWidget::ImgButtonWidget(QString imagePath, QWidget *parent) : QWidget(p
 }
 
 void ImgButtonWidget::loadImage() {
-    QtConcurrent::run([=]() {
+    QThreadPool::globalInstance()->start([=]() {
         QImageReader reader(imagePath);
         QSizeF size = reader.size();
         imageScale = size.height() / size.width();
 
         // Load the image
         QPixmap pixmap = QPixmap(imagePath);
-
+        if (!pixmap) {
+            QMetaObject::invokeMethod(this, [=]() {
+                this->nameLabel->setText("");
+                this->setFixedSize(0, 0);
+            }, Qt::QueuedConnection);
+        }
         qreal maxSize = std::max(pixmap.height(), pixmap.width());
         qreal scalingFactor = maxSize / 250;
         pixmap = pixmap.scaled(QSize(pixmap.width() / scalingFactor, pixmap.height() / scalingFactor),
@@ -52,6 +57,13 @@ void ImgButtonWidget::updateBackground() {
         return;
     }
     qreal parentWidth = parentWidget() ? parentWidget()->width() : width();
+    if (parentWidth > 350) {
+        parentWidth = 350;
+    }
+    if (abs(previousWidth - parentWidth) < 10) {
+        return;
+    }
+    previousWidth = parentWidth;
 
     qreal newWidth = parentWidth * 0.8;
     qreal newHeight = newWidth * imageScale;
