@@ -19,7 +19,7 @@ private:
 public:
     explicit FileManager(QWidget *parent = nullptr);
     void resizeEvent(QResizeEvent *event);
-    void updateItems();
+    void updateItems(QString dirPath);
 
 signals:
     void onImageButtonClicked(QString imagePath);
