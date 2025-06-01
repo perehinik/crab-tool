@@ -6,7 +6,8 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 
-#include "file_manager_widget.h"
+#include "DirNavigatorWidget.h"
+#include "ImageNavigatorWidget.h"
 #include "image_widget.h"
 #include "navigator_widget.h"
 #include "toolbox_widget.h"
@@ -17,12 +18,17 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow(QWidget *parent = nullptr);
+    void onPathChanged(QString dirPath);
     void onImageClicked(QString imagePath);
     ~MainWindow();
 
 private:
-    FileManager *fileManagerWidget;
+    ToolboxWidget *toolbox;
+    DirNavigatorWidget *dirNavigatorWidget;
+    ImageNavigatorWidget *imageNavigatorWidget;
     ImageWidget *imageWidget;
     NavigatorWidget *navigatorWidget;
+
+    void showEvent(QShowEvent *event);
 };
 #endif // MAINWINDOW_H

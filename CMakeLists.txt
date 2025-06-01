@@ -22,8 +22,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(crab-tool
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        file_manager_widget.cpp
-        file_manager_widget.h
         image_widget.cpp
         image_widget.h
         navigator_widget.cpp
@@ -31,13 +29,24 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         toolbox_widget.cpp
         toolbox_widget.h
         selection_rect.h selection_rect.cpp
-        image_button_widget.cpp
-        image_button_widget.h
+
+
         navigator_widget.h
-        file_manager_dir_widget.h
-        file_manager_dir_widget.cpp
+
         vertical_resize_widget.cpp
         vertical_resize_widget.h
+        ImageListModel.h
+        ImageListModel.cpp
+        ImageFilterProxy.cpp
+        ImageFilterProxy.h
+        ImageDirOnlyProxy.h
+        ImageDirOnlyProxy.cpp
+        ImageItemDelegte.cpp
+        ImageItemDelegate.h
+        ImageNavigatorWidget.cpp
+        ImageNavigatorWidget.h
+        DirNavigatorWidget.h
+        DirNavigatorWidget.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET CrabTool APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

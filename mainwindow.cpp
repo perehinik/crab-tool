@@ -1,60 +1,47 @@
 #include "mainwindow.h"
-#include "vertical_resize_widget.h"
 #include <QDockWidget>
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 {
-    // Create central widget and layout
-    QWidget *centralWidget = new QWidget(this);
-    QGridLayout *layout_main = new QGridLayout();
-    layout_main->setContentsMargins(0, 0, 0, 0);
-    layout_main->setSpacing(0);
+    toolbox = new ToolboxWidget();
 
-    QWidget *secondaryWidget = new QWidget(this);
+    imageWidget = new ImageWidget(this, "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg");
 
-    // Add widgets to layout with stretch factors (relative widths)
-    layout_main->addWidget(secondaryWidget, 1, 0);
+    dirNavigatorWidget = new DirNavigatorWidget(this);
+    QDockWidget *dirNavigatorDock = new QDockWidget("Directories", this);
+    dirNavigatorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    dirNavigatorDock->setWidget(dirNavigatorWidget);
+    dirNavigatorWidget->setMaximumHeight(200);
 
-    centralWidget->setMinimumSize(800, 300);
-    centralWidget->setLayout(layout_main);
+    QObject::connect(dirNavigatorWidget, &DirNavigatorWidget::onDirPathChanged, this, &MainWindow::onPathChanged);
 
-    QGridLayout *layout_secondary = new QGridLayout();
-    layout_secondary->setContentsMargins(0, 0, 0, 0);
-    layout_secondary->setSpacing(0);
+    imageNavigatorWidget = new ImageNavigatorWidget(this);
+    QDockWidget *imageNavigatorDock = new QDockWidget("Images", this);
+    imageNavigatorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    imageNavigatorDock->setWidget(imageNavigatorWidget);
 
-    // Create three widgets (buttons as example)
-
-    QWidget *toolbox = new ToolboxWidget();
-
-    imageWidget = new ImageWidget(secondaryWidget, "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg");
-
-    fileManagerWidget = new FileManager(secondaryWidget);
-    QDockWidget *dock1 = new QDockWidget("FileNavigator", this);
-    dock1->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    dock1->setWidget(fileManagerWidget);
-
-    navigatorWidget = new NavigatorWidget(secondaryWidget);
-    QDockWidget *dock2 = new QDockWidget("ImageNavigator", this);
-    dock2->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    dock2->setWidget(navigatorWidget);
-
-    QObject::connect(fileManagerWidget, &FileManager::onImageButtonClicked, this, &MainWindow::onImageClicked);
-
-    fileManagerWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    QObject::connect(imageNavigatorWidget, &ImageNavigatorWidget::onImageClicked, this, &MainWindow::onImageClicked);
 
     setMenuWidget(toolbox);
-    addDockWidget(Qt::LeftDockWidgetArea, dock1);
-    layout_secondary->addWidget(imageWidget, 0, 0);
-    addDockWidget(Qt::RightDockWidgetArea, dock2);
+    setCentralWidget(imageWidget);
+    addDockWidget(Qt::LeftDockWidgetArea, dirNavigatorDock);
+    addDockWidget(Qt::LeftDockWidgetArea, imageNavigatorDock);
+}
 
-    // Set layout to central widget
-    secondaryWidget->setLayout(layout_secondary);
-    setCentralWidget(centralWidget);
+void MainWindow::onPathChanged(QString dirPath)
+{
+    imageNavigatorWidget->setPath(dirPath);
 }
 
 void MainWindow::onImageClicked(QString imagePath)
 {
     imageWidget->setImage(imagePath);
+}
+
+void MainWindow::showEvent(QShowEvent *event) {
+    QMainWindow::showEvent(event);  // Call base class
+
+    dirNavigatorWidget->setMaximumHeight(10000);
 }
 
 MainWindow::~MainWindow() {}
