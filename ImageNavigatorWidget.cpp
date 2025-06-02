@@ -13,7 +13,7 @@ ImageNavigatorWidget::ImageNavigatorWidget(QWidget *parent) : QWidget(parent) {
     setLayout(mainLayout);
 
     model = new ImageListModel;
-    model->defaultPixmap = QPixmap("/home/ivan/proj/crab-tool/icon/add-line.png");
+    model->defaultPixmap = QPixmap("/home/ivan/proj/crab-tool/icon/image-wide.png");
 
     view = new QListView;
     view->setModel(model);
@@ -40,6 +40,7 @@ void ImageNavigatorWidget::setPath(QString dirPath) {
     QThreadPool::globalInstance()->start([=]() {
         QStringList filePathListLocal;
         QStringList fileNameListLocal;
+        QPixmap brokenPixmap = QPixmap("/home/ivan/proj/crab-tool/icon/image-broken-wide.png");
 
         QDirIterator it(dirPath, QStringList() << "*.jpg" << "*.png", QDir::Files, QDirIterator::Subdirectories);
         while (it.hasNext()) {
@@ -48,6 +49,20 @@ void ImageNavigatorWidget::setPath(QString dirPath) {
         }
         filePathListLocal.sort();
         QList<QPixmap> pixmapListLocal(filePathListLocal.size());
+
+        QModelIndex topIndex = view->indexAt(QPoint(0, 0));
+        QModelIndex bottomIndex = view->indexAt(QPoint(0, view->viewport()->height() - 1));
+
+        QMetaObject::invokeMethod(this, [=]() {
+            if (!self) {
+                return; // If object in main thread does not exist anymore
+            }
+            this->filePathList = filePathListLocal;
+            this->fileNameList = fileNameListLocal;
+            this->pixmapList = pixmapListLocal;
+            this->model->updateData(fileNameListLocal, pixmapListLocal);
+            this->view->viewport()->update();
+        }, Qt::QueuedConnection);
 
         for (int i = 0; i < filePathListLocal.length(); i++) {
             // First load scaled image with fast transformation
@@ -64,8 +79,7 @@ void ImageNavigatorWidget::setPath(QString dirPath) {
             QImage lowResImage = reader.read();
             QPixmap pixmap = QPixmap::fromImage(lowResImage);
             if (!pixmap) {
-                qWarning() << "Failed to load image:" << filePathListLocal[i];
-                continue;
+                pixmap = brokenPixmap;
             }
 
             // Rescale image with smooth transform
@@ -73,28 +87,53 @@ void ImageNavigatorWidget::setPath(QString dirPath) {
             qreal resizeFactor = maxSize / PIXMAP_MAX_SIDE_SIZE;
             pixmapListLocal[i] = pixmap.scaled(QSize(pixmap.width() / resizeFactor, pixmap.height() / resizeFactor),
                                                Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+            QMetaObject::invokeMethod(this, [=]() {
+                if (!self) {
+                    return; // If object in main thread does not exist anymore
+                }
+                this->updateItem(i, filePathListLocal[i], pixmapListLocal[i]);
+            }, Qt::QueuedConnection);
         }
+
         QMetaObject::invokeMethod(this, [=]() {
             if (!self) {
                 return; // If object in main thread does not exist anymore
             }
-            this->filePathList = filePathListLocal;
-            this->fileNameList = fileNameListLocal;
-            this->model->updateData(fileNameListLocal, pixmapListLocal);
-            this->view->viewport()->update();
+            this->updateView();
         }, Qt::QueuedConnection);
-
     });
 }
 
 void ImageNavigatorWidget::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
-    if (view->model()) {
-        view->doItemsLayout();  // forces layout update
-        view->updateGeometry(); // optional
-    }
+    updateView();
 }
 
 void ImageNavigatorWidget::onImageItemClicked(const QModelIndex &index) {
     emit onImageClicked(filePathList[index.row()]);
+}
+
+void ImageNavigatorWidget::updateItem(int index, const QString filePath, const QPixmap &pixmap) {
+    if (pixmapList.isEmpty() || pixmapList.length() <= index) {
+        return;
+    }
+    int topIndex = view->indexAt(QPoint(0, 0)).row();
+    int bottomIndex = view->indexAt(QPoint(0, view->viewport()->height() - 1)).row();
+    filePathList[index] = filePath;
+    fileNameList[index] = QFileInfo(filePath).fileName();
+    pixmapList[index] = pixmap;
+    model->fileNameList[index] = fileNameList[index];
+    model->pixmapList[index] = pixmapList[index];
+    if (index <= bottomIndex && index >= topIndex) {
+        updateView();
+    }
+}
+
+void ImageNavigatorWidget::updateView() {
+    if (!view || !view->model()) {
+        return;
+    }
+    view->doItemsLayout();  // forces layout update
+    view->updateGeometry();
 }

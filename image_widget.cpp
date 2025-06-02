@@ -21,12 +21,14 @@ void ImageWidget::setImage(QString imagePath) {
     rectangleList.clear();
     currentRect = nullptr;
     scene->clear();
+    initialized = false;
     pixmap = QPixmap(imagePath);
     if (!pixmap.isNull()) {
         imageItem = scene->addPixmap(pixmap);
         // imageItem->setTransformationMode(Qt::SmoothTransformation);
         imageItem->setPos(0, 0);
         scene->setSceneRect(pixmap.rect());
+        initialized = true;
     }
 }
 
@@ -65,6 +67,9 @@ void ImageWidget::setResized(bool isResized) {
 
 void ImageWidget::resizeEvent(QResizeEvent *event) {
     QGraphicsView::resizeEvent(event);
+    if (!initialized) {
+        return;
+    }
     if (scene && scene->sceneRect().isValid() && !resized) {
         setResized(false);
     }
@@ -73,6 +78,10 @@ void ImageWidget::resizeEvent(QResizeEvent *event) {
 }
 
 void ImageWidget::wheelEvent(QWheelEvent *event) {
+    QGraphicsView::wheelEvent(event);
+    if (!initialized) {
+        return;
+    }
     // Get position in scene coordinates under cursor
     QPointF cursorScenePos = mapToScene(event->position().toPoint());
 
@@ -102,6 +111,9 @@ void ImageWidget::wheelEvent(QWheelEvent *event) {
 }
 
 void ImageWidget::mousePressEvent(QMouseEvent *event) {
+    if (!initialized) {
+        return;
+    }
     QPointF mousePos = mapToScene(event->pos());
     if (event->button() == Qt::LeftButton) {
         activateRectByPoint(mousePos);

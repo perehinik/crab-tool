@@ -8,6 +8,7 @@ public:
     QStringList fileNameList;
     QList<QPixmap> pixmapList;
     QPixmap defaultPixmap;
+    QPixmap brokenPixmap;
 
     ImageListModel(QObject *parent = nullptr) : QAbstractListModel(parent) {}
 

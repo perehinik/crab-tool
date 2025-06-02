@@ -35,6 +35,7 @@ private:
     const double zoomStep = 1.15;
     const double maxZoom = 100.0;
     bool resized = false;
+    bool initialized = false;
 
     QList<SelectionRect*> rectangleList;
     SelectionRect *currentRect = nullptr;

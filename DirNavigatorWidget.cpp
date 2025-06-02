@@ -32,14 +32,12 @@ void DirNavigatorWidget::showEvent(QShowEvent *event) {
     QWidget::showEvent(event);
 
     if (!initialized) {
-        qDebug() << "Initialise Dir Naviator";
         model = new QFileSystemModel(this);
         model->setRootPath("/home/ivan/proj/TrainingData/");
 
         proxy = new ImageDirOnlyProxy(this);
         proxy->setSourceModel(model);
 
-        qDebug() << "Set Model";
         view->setModel(proxy);
         view->setRootIndex(proxy->mapFromSource(model->index("/home/ivan/proj/TrainingData/")));  // Start at home directory
         view->setHeaderHidden(true);  // Optional: hide file size/date columns

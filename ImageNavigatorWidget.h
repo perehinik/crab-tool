@@ -16,7 +16,6 @@ private:
     QList<QString> fileNameList;
     QList<QString> filePathList;
     QList<QPixmap> pixmapList;
-    QPixmap defaultPixmap;
     ImageListModel *model;
     QListView *view;
 
@@ -27,6 +26,8 @@ public:
     void resizeEvent(QResizeEvent *event);
     void updateItems(QString dirPath);
     void setPath(QString dirPath);
+    void updateItem(int index, const QString filePath, const QPixmap &pixmap);
+    void updateView();
 
 signals:
     void onImageClicked(QString imagePath);

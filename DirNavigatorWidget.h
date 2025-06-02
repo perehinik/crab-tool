@@ -7,7 +7,7 @@
 #include <QFileSystemModel>
 #include "ImageDirOnlyProxy.h"
 
-#define PIXMAP_MAX_SIDE_SIZE 300
+#define PIXMAP_MAX_SIDE_SIZE 250
 
 class DirNavigatorWidget : public QWidget {
     Q_OBJECT

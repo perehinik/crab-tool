@@ -1,6 +1,5 @@
 #include "ImageDirOnlyProxy.h"
 #include <QFileSystemModel>
-#include <QElapsedTimer>
 
 bool ImageDirOnlyProxy::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const {
     QFileSystemModel *fsModel = qobject_cast<QFileSystemModel *>(sourceModel());
@@ -39,11 +38,7 @@ bool ImageDirOnlyProxy::hasChildren(const QModelIndex &parent) const {
 }
 
 bool ImageDirOnlyProxy::directoryContainsImages(const QString &path) const {
-    QElapsedTimer timer;
-    timer.start();
-
     if (imageDirCache.contains(path)) {
-        qDebug() << "[x]" << path << "took" << timer.elapsed() << "ms";
         return imageDirCache[path];
     }
 
@@ -52,7 +47,6 @@ bool ImageDirOnlyProxy::directoryContainsImages(const QString &path) const {
 
     if (!dir.entryList(imageFilters, QDir::Files).isEmpty()) {
         imageDirCache[path] = true;
-        qDebug() << "[x]" << path << "took" << timer.elapsed() << "ms";
         return true;
     }
 
@@ -60,12 +54,10 @@ bool ImageDirOnlyProxy::directoryContainsImages(const QString &path) const {
     for (int i = 0; i < subDirs.length(); i++) {
         if (directoryContainsImages(subDirs[i].absoluteFilePath())) {
             imageDirCache[path] = true;
-            qDebug() << "[x]" << path << ":" << timer.elapsed() << "ms";
             return true;
         }
     }
 
     imageDirCache[path] = false;
-    qDebug() << "[x]" << path << "took" << timer.elapsed() << "ms";
     return false;
 }
