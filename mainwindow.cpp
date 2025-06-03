@@ -11,6 +11,15 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
     QDockWidget *dirNavigatorDock = new QDockWidget("Directories", this);
     dirNavigatorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     dirNavigatorDock->setWidget(dirNavigatorWidget);
+    setStyleSheet(R"(
+    QDockWidget {
+        background-color: #dadada;
+    }
+    QDockWidget::title {
+        background-color: #dadada;
+        padding: 4px;
+    }
+    )");
     dirNavigatorWidget->setMaximumHeight(200);
 
     QObject::connect(dirNavigatorWidget, &DirNavigatorWidget::onDirPathChanged, this, &MainWindow::onPathChanged);

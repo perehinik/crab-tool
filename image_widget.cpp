@@ -78,7 +78,6 @@ void ImageWidget::resizeEvent(QResizeEvent *event) {
 }
 
 void ImageWidget::wheelEvent(QWheelEvent *event) {
-    QGraphicsView::wheelEvent(event);
     if (!initialized) {
         return;
     }

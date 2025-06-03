@@ -44,8 +44,9 @@ void ImageNavigatorWidget::setPath(QString dirPath) {
 
         QDirIterator it(dirPath, QStringList() << "*.jpg" << "*.png", QDir::Files, QDirIterator::Subdirectories);
         while (it.hasNext()) {
-            filePathListLocal << it.next();
-            fileNameListLocal << QFileInfo(it.next()).fileName();
+            QString filePath = it.next();
+            filePathListLocal << filePath;
+            fileNameListLocal << QFileInfo(filePath).fileName();
         }
         filePathListLocal.sort();
         QList<QPixmap> pixmapListLocal(filePathListLocal.size());
@@ -125,7 +126,7 @@ void ImageNavigatorWidget::updateItem(int index, const QString filePath, const Q
     pixmapList[index] = pixmap;
     model->fileNameList[index] = fileNameList[index];
     model->pixmapList[index] = pixmapList[index];
-    if (index <= bottomIndex && index >= topIndex) {
+    if ((index <= bottomIndex && index >= topIndex) || index % 100 == 0) {
         updateView();
     }
 }
