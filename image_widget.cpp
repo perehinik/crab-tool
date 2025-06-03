@@ -6,14 +6,15 @@
 #include <QDebug>
 
 ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(parent) {
+    setAttribute(Qt::WA_StyledBackground, true);
+    setStyleSheet("border: solid lightgrey; border-width: 0px 1px 0px 1px;");
+
     scene = new QGraphicsScene(this);
     setScene(scene);
     setRenderHint(QPainter::Antialiasing);
     setRenderHint(QPainter::SmoothPixmapTransform);
     setDragMode(QGraphicsView::NoDrag);
     setImage(imagePath);
-
-    setStyleSheet("border: 0px solid grey;");
 }
 
 void ImageWidget::setImage(QString imagePath) {
@@ -113,11 +114,23 @@ void ImageWidget::mousePressEvent(QMouseEvent *event) {
     if (!initialized) {
         return;
     }
-    QPointF mousePos = mapToScene(event->pos());
+
+    QPointF currentPos = mapToScene(event->pos());
+    QSize imageSize = imageItem->pixmap().size();
+    int imageWidth = imageSize.width();
+    int imageHeight = imageSize.height();
+
+    if (currentPos.x() < 0 ||
+        currentPos.y() < 0 ||
+        currentPos.x() > imageWidth ||
+        currentPos.y() > imageHeight) {
+            return;
+    }
+
     if (event->button() == Qt::LeftButton) {
-        activateRectByPoint(mousePos);
+        activateRectByPoint(currentPos);
         if (!currentRect) {
-            startPos = mousePos;
+            startPos = currentPos;
             currentRect = new SelectionRect(scene, QRectF(startPos, startPos), (qreal)1.0 / transform().m11());
         }
     }

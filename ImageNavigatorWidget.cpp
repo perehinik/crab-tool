@@ -13,7 +13,7 @@ ImageNavigatorWidget::ImageNavigatorWidget(QWidget *parent) : QWidget(parent) {
     setLayout(mainLayout);
 
     model = new ImageListModel;
-    model->defaultPixmap = QPixmap("/home/ivan/proj/crab-tool/icon/image-wide.png");
+    model->defaultPixmap = QPixmap(":/icon/image-wide.png");
 
     view = new QListView;
     view->setModel(model);
@@ -40,7 +40,7 @@ void ImageNavigatorWidget::setPath(QString dirPath) {
     QThreadPool::globalInstance()->start([=]() {
         QStringList filePathListLocal;
         QStringList fileNameListLocal;
-        QPixmap brokenPixmap = QPixmap("/home/ivan/proj/crab-tool/icon/image-broken-wide.png");
+        QPixmap brokenPixmap = QPixmap(":/icon/image-broken-wide.png");
 
         QDirIterator it(dirPath, QStringList() << "*.jpg" << "*.png", QDir::Files, QDirIterator::Subdirectories);
         while (it.hasNext()) {

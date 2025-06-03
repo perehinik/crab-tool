@@ -47,6 +47,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ImageNavigatorWidget.h
         DirNavigatorWidget.h
         DirNavigatorWidget.cpp
+        resources.qrc
+        ToolboxButton.cpp
+        ToolboxButton.h
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET CrabTool APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

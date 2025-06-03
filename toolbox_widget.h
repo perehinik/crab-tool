@@ -8,6 +8,8 @@ class ToolboxWidget : public QWidget {
 
 public:
     explicit ToolboxWidget(QWidget *parent = nullptr);
+    void onOpenFile();
+    void onOpenDir();
 };
 
 #endif // TOOLBOX_WIDGET_H
