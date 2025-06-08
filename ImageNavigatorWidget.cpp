@@ -34,41 +34,41 @@ ImageNavigatorWidget::ImageNavigatorWidget(QWidget *parent) : QWidget(parent) {
 }
 
 void ImageNavigatorWidget::setPath(QString dirPath) {
-    QPointer<ImageNavigatorWidget> self = this;
     this->dirPath = dirPath;
+    QStringList imagePathList;
 
-    QThreadPool::globalInstance()->start([=]() {
-        QStringList filePathListLocal;
-        QStringList fileNameListLocal;
-        QPixmap brokenPixmap = QPixmap(":/icon/image-broken-wide.png");
+    QDirIterator it(dirPath, QStringList() << "*.jpg" << "*.png", QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        QString filePath = it.next();
+        imagePathList << filePath;
+    }
+    loadItems(imagePathList);
+}
 
-        QDirIterator it(dirPath, QStringList() << "*.jpg" << "*.png", QDir::Files, QDirIterator::Subdirectories);
-        while (it.hasNext()) {
-            QString filePath = it.next();
-            filePathListLocal << filePath;
-            fileNameListLocal << QFileInfo(filePath).fileName();
-        }
-        filePathListLocal.sort();
-        QList<QPixmap> pixmapListLocal(filePathListLocal.size());
+void ImageNavigatorWidget::loadItems(QStringList imagePathList) {
+    QPointer<ImageNavigatorWidget> self = this;
 
-        QModelIndex topIndex = view->indexAt(QPoint(0, 0));
-        QModelIndex bottomIndex = view->indexAt(QPoint(0, view->viewport()->height() - 1));
+    QStringList imageNameList;
 
-        QMetaObject::invokeMethod(this, [=]() {
-            if (!self) {
-                return; // If object in main thread does not exist anymore
-            }
-            this->filePathList = filePathListLocal;
-            this->fileNameList = fileNameListLocal;
-            this->pixmapList = pixmapListLocal;
-            this->model->updateData(fileNameListLocal, pixmapListLocal);
-            this->view->viewport()->update();
-        }, Qt::QueuedConnection);
+    imagePathList.sort();
+    for (int i = 0; i < imagePathList.length(); i ++) {
+        imageNameList << QFileInfo(imagePathList[i]).fileName();
+    }
 
-        for (int i = 0; i < filePathListLocal.length(); i++) {
+    QList<QPixmap> pixmapListLocal(imagePathList.size());
+
+    filePathList = imagePathList;
+    fileNameList = imageNameList;
+    pixmapList = pixmapListLocal;
+    model->updateData(imageNameList, pixmapListLocal);
+    view->viewport()->update();
+
+    for (int i = 0; i < imagePathList.length(); i++) {
+        QThreadPool::globalInstance()->start([=]() {
+            QString imagePath = imagePathList[i];
             // First load scaled image with fast transformation
             // Resolution should be a bit better than one that will be finally used
-            QImageReader reader(filePathListLocal[i]);
+            QImageReader reader(imagePath);
             QSizeF size = reader.size();
             qreal imageScale = size.height() / size.width();
 
@@ -80,30 +80,33 @@ void ImageNavigatorWidget::setPath(QString dirPath) {
             QImage lowResImage = reader.read();
             QPixmap pixmap = QPixmap::fromImage(lowResImage);
             if (!pixmap) {
-                pixmap = brokenPixmap;
+                pixmap = QPixmap(":/icon/image-broken-wide.png");
             }
 
             // Rescale image with smooth transform
             qreal maxSize = std::max(pixmap.height(), pixmap.width());
             qreal resizeFactor = maxSize / PIXMAP_MAX_SIDE_SIZE;
-            pixmapListLocal[i] = pixmap.scaled(QSize(pixmap.width() / resizeFactor, pixmap.height() / resizeFactor),
+            pixmap = pixmap.scaled(QSize(pixmap.width() / resizeFactor, pixmap.height() / resizeFactor),
                                                Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
             QMetaObject::invokeMethod(this, [=]() {
                 if (!self) {
                     return; // If object in main thread does not exist anymore
                 }
-                this->updateItem(i, filePathListLocal[i], pixmapListLocal[i]);
+                this->updateItem(i, imagePath, pixmap);
             }, Qt::QueuedConnection);
-        }
 
-        QMetaObject::invokeMethod(this, [=]() {
-            if (!self) {
-                return; // If object in main thread does not exist anymore
+            // This should be done different way, I should check if all pixmaps got loaded before update.
+            if (i + 1 >= imagePathList.length()) {
+                QMetaObject::invokeMethod(this, [=]() {
+                    if (!self) {
+                        return; // If object in main thread does not exist anymore
+                    }
+                    this->updateView();
+                }, Qt::QueuedConnection);
             }
-            this->updateView();
-        }, Qt::QueuedConnection);
-    });
+        });
+    }
 }
 
 void ImageNavigatorWidget::resizeEvent(QResizeEvent *event) {

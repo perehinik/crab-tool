@@ -25,6 +25,7 @@ public:
     explicit ImageNavigatorWidget(QWidget *parent = nullptr);
     void resizeEvent(QResizeEvent *event);
     void updateItems(QString dirPath);
+    void loadItems(QStringList imagePathList);
     void setPath(QString dirPath);
     void updateItem(int index, const QString filePath, const QPixmap &pixmap);
     void updateView();

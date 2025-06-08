@@ -26,9 +26,13 @@ private:
     ToolboxWidget *toolbox;
     DirNavigatorWidget *dirNavigatorWidget;
     ImageNavigatorWidget *imageNavigatorWidget;
+    QDockWidget *imageNavigatorDock;
+    QDockWidget *dirNavigatorDock;
     ImageWidget *imageWidget;
     NavigatorWidget *navigatorWidget;
 
     void showEvent(QShowEvent *event);
+    void onDirOpen(QString dirPath);
+    void onFilesOpen(QStringList filePathList);
 };
 #endif // MAINWINDOW_H

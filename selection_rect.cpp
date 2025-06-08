@@ -61,7 +61,7 @@ void SelectionRect::setScale(qreal scale)
 {
     this->scale = scale;
     setRect(graphicsRect->rect());
-    linePen.setWidth(lineWidth * scale);
+    linePen.setWidthF(lineWidth * scale);
     graphicsRect->setPen(linePen);
 }
 

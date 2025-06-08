@@ -5,10 +5,13 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 {
     toolbox = new ToolboxWidget();
 
+    QObject::connect(toolbox, &ToolboxWidget::onDirOpen, this, &MainWindow::onDirOpen);
+    QObject::connect(toolbox, &ToolboxWidget::onFilesOpen, this, &MainWindow::onFilesOpen);
+
     imageWidget = new ImageWidget(this, "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg");
 
     dirNavigatorWidget = new DirNavigatorWidget(this);
-    QDockWidget *dirNavigatorDock = new QDockWidget("Directories", this);
+    dirNavigatorDock = new QDockWidget("Directories", this);
     dirNavigatorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     dirNavigatorDock->setWidget(dirNavigatorWidget);
     setStyleSheet(R"(
@@ -25,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
     QObject::connect(dirNavigatorWidget, &DirNavigatorWidget::onDirPathChanged, this, &MainWindow::onPathChanged);
 
     imageNavigatorWidget = new ImageNavigatorWidget(this);
-    QDockWidget *imageNavigatorDock = new QDockWidget("Images", this);
+    imageNavigatorDock = new QDockWidget("Images", this);
     imageNavigatorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     imageNavigatorDock->setWidget(imageNavigatorWidget);
 
@@ -35,6 +38,17 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
     setCentralWidget(imageWidget);
     addDockWidget(Qt::LeftDockWidgetArea, dirNavigatorDock);
     addDockWidget(Qt::LeftDockWidgetArea, imageNavigatorDock);
+}
+
+void MainWindow::onDirOpen(QString dirPath)
+{
+    dirNavigatorWidget->setPath(dirPath);
+    dirNavigatorDock->show();
+}
+
+void MainWindow::onFilesOpen(QStringList filePathList) {
+    imageNavigatorWidget->loadItems(filePathList);
+    dirNavigatorDock->hide();
 }
 
 void MainWindow::onPathChanged(QString dirPath)

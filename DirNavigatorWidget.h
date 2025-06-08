@@ -7,23 +7,22 @@
 #include <QFileSystemModel>
 #include "ImageDirOnlyProxy.h"
 
-#define PIXMAP_MAX_SIDE_SIZE 250
-
 class DirNavigatorWidget : public QWidget {
     Q_OBJECT
 
 private:
     QString dirPath;
+    QString requestedPath;
     QFileSystemModel *model;
     ImageDirOnlyProxy *proxy;
     QTreeView *view;
     bool initialized;
-
     void onPathChanged(const QModelIndex &index);
     void showEvent(QShowEvent *event);
 
 public:
     explicit DirNavigatorWidget(QWidget *parent = nullptr);
+    void setPath(QString dirPath);
 
 signals:
     void onDirPathChanged(QString imagePath);

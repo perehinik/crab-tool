@@ -39,6 +39,7 @@ void ToolboxWidget::onOpenFile() {
     if (fileNames.isEmpty()) {
         return;
     }
+    emit onFilesOpen(fileNames);
 }
 
 void ToolboxWidget::onOpenDir() {
@@ -52,4 +53,5 @@ void ToolboxWidget::onOpenDir() {
     if (dirPath.isEmpty()) {
         return;
     }
+    emit onDirOpen(dirPath);
 }
