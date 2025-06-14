@@ -1,6 +1,7 @@
 #ifndef TOOLBOX_WIDGET_H
 #define TOOLBOX_WIDGET_H
 
+#include "ToolboxButton.h"
 #include <QWidget>
 
 class ToolboxWidget : public QWidget {
@@ -10,6 +11,12 @@ public:
     explicit ToolboxWidget(QWidget *parent = nullptr);
     void onOpenFile();
     void onOpenDir();
+
+    ToolboxButton *saveButton;
+    ToolboxButton *handToolButton;
+    ToolboxButton *zoomInToolButton;
+    ToolboxButton *zoomOutToolButton;
+    ToolboxButton *zoomToExtentsToolButton;
 
 signals:
     void onDirOpen(QString dirPath);

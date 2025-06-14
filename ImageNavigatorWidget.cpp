@@ -36,8 +36,9 @@ ImageNavigatorWidget::ImageNavigatorWidget(QWidget *parent) : QWidget(parent) {
 void ImageNavigatorWidget::setPath(QString dirPath) {
     this->dirPath = dirPath;
     QStringList imagePathList;
+    QStringList imageExtensions = {"*.jpg", "*.jpeg", "*.png", "*.bmp", "*.gif", "*.webp"};
 
-    QDirIterator it(dirPath, QStringList() << "*.jpg" << "*.png", QDir::Files, QDirIterator::Subdirectories);
+    QDirIterator it(dirPath, imageExtensions, QDir::Files);
     while (it.hasNext()) {
         QString filePath = it.next();
         imagePathList << filePath;

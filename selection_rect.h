@@ -25,7 +25,7 @@ private:
     QPointF startPos;
 
     qreal lineWidth = 2;
-    qreal circleSize = 6;
+    qreal circleSize = 8;
     qreal scale = 6;
 
     QPen linePen = QPen(QColor(0, 255, 0, 128), lineWidth * scale);

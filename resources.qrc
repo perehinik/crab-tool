@@ -4,5 +4,10 @@
         <file>icon/image-broken-wide.png</file>
         <file>icon/folder-fill.png</file>
         <file>icon/file-add-fill.png</file>
+        <file>icon/drag.png</file>
+        <file>icon/zoom-to-extents.png</file>
+        <file>icon/zoom-out.png</file>
+        <file>icon/zoom-in.png</file>
+        <file>icon/save.png</file>
     </qresource>
 </RCC>

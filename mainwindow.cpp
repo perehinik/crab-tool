@@ -4,11 +4,16 @@
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 {
     toolbox = new ToolboxWidget();
+    connect(toolbox->handToolButton, &QToolButton::toggled, this, &MainWindow::onMoveChanged);
 
     QObject::connect(toolbox, &ToolboxWidget::onDirOpen, this, &MainWindow::onDirOpen);
     QObject::connect(toolbox, &ToolboxWidget::onFilesOpen, this, &MainWindow::onFilesOpen);
 
     imageWidget = new ImageWidget(this, "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg");
+
+    connect(toolbox->zoomInToolButton->action, &QAction::triggered, imageWidget, &ImageWidget::zoomIn);
+    connect(toolbox->zoomOutToolButton->action, &QAction::triggered, imageWidget, &ImageWidget::zoomOut);
+    connect(toolbox->zoomToExtentsToolButton->action, &QAction::triggered, imageWidget, &ImageWidget::zoomToExtent);
 
     dirNavigatorWidget = new DirNavigatorWidget(this);
     dirNavigatorDock = new QDockWidget("Directories", this);
@@ -44,6 +49,15 @@ void MainWindow::onDirOpen(QString dirPath)
 {
     dirNavigatorWidget->setPath(dirPath);
     dirNavigatorDock->show();
+}
+
+void MainWindow::onMoveChanged()
+{
+    if (toolbox->handToolButton->isChecked()) {
+        imageWidget->setDragMode(QGraphicsView::ScrollHandDrag);
+    } else {
+        imageWidget->setDragMode(QGraphicsView::NoDrag);
+    }
 }
 
 void MainWindow::onFilesOpen(QStringList filePathList) {

@@ -34,5 +34,6 @@ private:
     void showEvent(QShowEvent *event);
     void onDirOpen(QString dirPath);
     void onFilesOpen(QStringList filePathList);
+    void onMoveChanged();
 };
 #endif // MAINWINDOW_H

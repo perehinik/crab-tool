@@ -57,10 +57,8 @@ void ImageWidget::checkZoom() {
 void ImageWidget::setResized(bool isResized) {
     if (isResized) {
         this->resized = true;
-        setDragMode(QGraphicsView::ScrollHandDrag);
     } else {
         this->resized = false;
-        setDragMode(QGraphicsView::NoDrag);
         zoomLevel = 1.0;
         fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
     }
@@ -78,18 +76,7 @@ void ImageWidget::resizeEvent(QResizeEvent *event) {
     updateRect();
 }
 
-void ImageWidget::wheelEvent(QWheelEvent *event) {
-    if (!initialized) {
-        return;
-    }
-    // Get position in scene coordinates under cursor
-    QPointF cursorScenePos = mapToScene(event->position().toPoint());
-
-    // Determine zoom direction
-    bool zoomIn = event->angleDelta().y() > 0;
-    double factor = zoomIn ? zoomStep : (1.0 / zoomStep);
-    double newZoomLevel = zoomLevel * factor;
-
+void ImageWidget::setZoom(double factor, double newZoomLevel) {
     // Clamp zoom level to reasonable range
     if (newZoomLevel > maxZoom) {return;}
 
@@ -98,16 +85,46 @@ void ImageWidget::wheelEvent(QWheelEvent *event) {
     setResized(std::round(newZoomLevel * 100) / 100 > 1.0);
     zoomLevel = newZoomLevel;
 
+    // Prevent zooming out beyond full-scene view
+    checkZoom();
+    // rectanglePen.setWidth(2*zoomLevel);
+    updateRect();
+}
+
+void ImageWidget::zoomIn() {
+    double factor = zoomStep;
+    double newZoomLevel = zoomLevel * factor;
+    setZoom(factor, newZoomLevel);
+}
+
+void ImageWidget::zoomOut() {
+    double factor = 1.0 / zoomStep;
+    double newZoomLevel = zoomLevel * factor;
+    setZoom(factor, newZoomLevel);
+}
+
+void ImageWidget::zoomToExtent() {
+    double factor = 1.0 / zoomStep;
+    double newZoomLevel = 1;
+    setZoom(factor, newZoomLevel);
+}
+
+void ImageWidget::wheelEvent(QWheelEvent *event) {
+    if (!initialized) {
+        return;
+    }
+    // Get position in scene coordinates under cursor
+    QPointF cursorScenePos = mapToScene(event->position().toPoint());
+
+    // Determine zoom direction
+    bool zoomInEvent = event->angleDelta().y() > 0;
+    zoomInEvent ? zoomIn() : zoomOut();
+
     // Keep mouse cursor fixed on the same scene point
     QPointF newCursorViewPos = mapFromScene(cursorScenePos);
     QPointF viewCenterShift = newCursorViewPos - event->position();
     horizontalScrollBar()->setValue(horizontalScrollBar()->value() + viewCenterShift.x());
     verticalScrollBar()->setValue(verticalScrollBar()->value() + viewCenterShift.y());
-
-    // Prevent zooming out beyond full-scene view
-    checkZoom();
-    // rectanglePen.setWidth(2*zoomLevel);
-    updateRect();
 }
 
 void ImageWidget::mousePressEvent(QMouseEvent *event) {
@@ -127,11 +144,12 @@ void ImageWidget::mousePressEvent(QMouseEvent *event) {
             return;
     }
 
-    if (event->button() == Qt::LeftButton) {
+    if (event->button() == Qt::LeftButton && dragMode() == QGraphicsView::NoDrag) {
         activateRectByPoint(currentPos);
         if (!currentRect) {
             startPos = currentPos;
             currentRect = new SelectionRect(scene, QRectF(startPos, startPos), (qreal)1.0 / transform().m11());
+            currentRect->setScale(1 / transform().m11());
         }
     }
     QGraphicsView::mousePressEvent(event);

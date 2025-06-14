@@ -4,6 +4,7 @@
 #include <QToolButton>
 #include <QPushButton>
 #include <QFileDialog>
+#include <QCursor>
 #include "ToolboxButton.h"
 
 #define TOOLBOX_BUTTON_HEIGHT 30
@@ -24,8 +25,22 @@ ToolboxWidget::ToolboxWidget(QWidget *parent) : QWidget(parent) {
     ToolboxButton *openDirButton = new ToolboxButton(QIcon(":/icon/folder-fill.png"), "Open Directory", 32, 24, this);
     connect(openDirButton->action, &QAction::triggered, this, &ToolboxWidget::onOpenDir);
 
+    saveButton = new ToolboxButton(QIcon(":/icon/save.png"), "Save", 32, 24, this);
+
+    handToolButton = new ToolboxButton(QIcon(":/icon/drag.png"), "Move", 32, 24, this);
+    handToolButton->action->setCheckable(true);
+
+    zoomInToolButton = new ToolboxButton(QIcon(":/icon/zoom-in.png"), "Zoom In", 32, 24, this);
+    zoomOutToolButton = new ToolboxButton(QIcon(":/icon/zoom-out.png"), "Zoom Out", 32, 24, this);
+    zoomToExtentsToolButton = new ToolboxButton(QIcon(":/icon/zoom-to-extents.png"), "Zoom To Extents", 32, 24, this);
+
     layout->addWidget(openFileButton, 0, 0);
     layout->addWidget(openDirButton, 0, 1);
+    layout->addWidget(saveButton, 0, 2);
+    layout->addWidget(handToolButton, 0, 3);
+    layout->addWidget(zoomInToolButton, 0, 4);
+    layout->addWidget(zoomOutToolButton, 0, 5);
+    layout->addWidget(zoomToExtentsToolButton, 0, 6);
 }
 
 void ToolboxWidget::onOpenFile() {

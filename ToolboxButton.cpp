@@ -25,5 +25,9 @@ ToolboxButton::ToolboxButton(const QIcon &icon, const char *name, int size, int 
         QToolButton:pressed {
             background-color: #c0e0ff;
         }
+
+        QToolButton:checked {
+            background-color: #a0d0ff;
+        }
     )");
 }

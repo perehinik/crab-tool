@@ -15,6 +15,10 @@ class ImageWidget : public QGraphicsView {
 public:
     explicit ImageWidget(QWidget *parent = nullptr, const QString imagePath = nullptr);
     void setImage(QString imagePath);
+    void setZoom(double factor, double newZoomLevel);
+    void zoomIn();
+    void zoomOut();
+    void zoomToExtent();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
