@@ -1,5 +1,5 @@
-#ifndef IMAGE_WIDGET_H
-#define IMAGE_WIDGET_H
+#ifndef MAINIMAGEWIDGET_H
+#define MAINIMAGEWIDGET_H
 
 #include <QGraphicsView>
 #include <QGraphicsScene>
@@ -7,7 +7,7 @@
 #include <QWheelEvent>
 #include <QMouseEvent>
 #include <QScrollBar>
-#include "selection_rect.h"
+#include "SelectionRect.h"
 
 class ImageWidget : public QGraphicsView {
     Q_OBJECT
@@ -49,4 +49,4 @@ private:
     QPen rectanglePen = QPen(Qt::green, 20);
 };
 
-#endif // IMAGE_WIDGET_H
+#endif // MAINIMAGEWIDGET_H

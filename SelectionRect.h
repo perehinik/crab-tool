@@ -1,5 +1,5 @@
-#ifndef SELECTION_RECT_H
-#define SELECTION_RECT_H
+#ifndef SELECTIONRECT_H
+#define SELECTIONRECT_H
 
 #include <QGraphicsScene>
 #include <QGraphicsEllipseItem>
@@ -33,4 +33,4 @@ private:
     QBrush circleBrush = QBrush(QColor(255, 0, 0, 255));
 };
 
-#endif // SELECTION_RECT_H
+#endif // SELECTIONRECT_H

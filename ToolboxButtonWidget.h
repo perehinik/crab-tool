@@ -1,5 +1,5 @@
-#ifndef TOOLBOXBUTTON_H
-#define TOOLBOXBUTTON_H
+#ifndef TOOLBOXBUTTONWIDGET_H
+#define TOOLBOXBUTTONWIDGET_H
 
 #include <QToolButton>
 #include <QAction>
@@ -13,4 +13,4 @@ public:
     ToolboxButton(const QIcon &icon, const char *name, int size, int iconSize, QWidget *parent);
 };
 
-#endif // TOOLBOXBUTTON_H
+#endif // TOOLBOXBUTTONWIDGET_H

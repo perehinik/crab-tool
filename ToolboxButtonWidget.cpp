@@ -1,4 +1,4 @@
-#include "ToolboxButton.h"
+#include "ToolboxButtonWidget.h"
 
 ToolboxButton::ToolboxButton(const QIcon &icon, const char *name, int size, int iconSize, QWidget *parent)
     : QToolButton(parent)

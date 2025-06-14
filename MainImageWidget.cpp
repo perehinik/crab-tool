@@ -1,4 +1,4 @@
-#include "image_widget.h"
+#include "MainImageWidget.h"
 #include <QPalette>
 #include <QPainter>
 #include <QGraphicsPixmapItem>
@@ -7,6 +7,7 @@
 
 ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(parent) {
     setAttribute(Qt::WA_StyledBackground, true);
+    setMinimumWidth(300);
     setStyleSheet("border: solid lightgrey; border-width: 0px 1px 0px 1px;");
 
     scene = new QGraphicsScene(this);

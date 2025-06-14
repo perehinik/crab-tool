@@ -1,7 +1,7 @@
-#include "navigator_widget.h"
+#include "ImageZoomWidget.h"
 #include <QPalette>
 
-NavigatorWidget::NavigatorWidget(QWidget *parent) : QWidget(parent) {
+ImageZoomWidget::ImageZoomWidget(QWidget *parent) : QWidget(parent) {
     // setFixedWidth(300);
 
     // Set gray background using palette

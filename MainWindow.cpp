@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "MainWindow.h"
 #include <QDockWidget>
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
     QObject::connect(toolbox, &ToolboxWidget::onDirOpen, this, &MainWindow::onDirOpen);
     QObject::connect(toolbox, &ToolboxWidget::onFilesOpen, this, &MainWindow::onFilesOpen);
 
-    imageWidget = new ImageWidget(this, "/home/ivan/proj/TrainingData/RAW/2025-04-28_15-01-07/capture_00213.jpg");
+    imageWidget = new ImageWidget(this);
 
     connect(toolbox->zoomInToolButton->action, &QAction::triggered, imageWidget, &ImageWidget::zoomIn);
     connect(toolbox->zoomOutToolButton->action, &QAction::triggered, imageWidget, &ImageWidget::zoomOut);

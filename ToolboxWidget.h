@@ -1,7 +1,7 @@
-#ifndef TOOLBOX_WIDGET_H
-#define TOOLBOX_WIDGET_H
+#ifndef TOOLBOXWIDGET_H
+#define TOOLBOXWIDGET_H
 
-#include "ToolboxButton.h"
+#include "ToolboxButtonWidget.h"
 #include <QWidget>
 
 class ToolboxWidget : public QWidget {
@@ -23,4 +23,4 @@ signals:
     void onFilesOpen(QStringList filePathList);
 };
 
-#endif // TOOLBOX_WIDGET_H
+#endif // TOOLBOXWIDGET_H

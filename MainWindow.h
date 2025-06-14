@@ -8,9 +8,9 @@
 
 #include "DirNavigatorWidget.h"
 #include "ImageNavigatorWidget.h"
-#include "image_widget.h"
-#include "navigator_widget.h"
-#include "toolbox_widget.h"
+#include "MainImageWidget.h"
+#include "ImageZoomWidget.h"
+#include "ToolboxWidget.h"
 
 class MainWindow : public QMainWindow
 {
@@ -29,7 +29,7 @@ private:
     QDockWidget *imageNavigatorDock;
     QDockWidget *dirNavigatorDock;
     ImageWidget *imageWidget;
-    NavigatorWidget *navigatorWidget;
+    ImageZoomWidget *navigatorWidget;
 
     void showEvent(QShowEvent *event);
     void onDirOpen(QString dirPath);
