@@ -12,75 +12,41 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Concurrent)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Concurrent)
 
-set(PROJECT_SOURCES
-        main.cpp
-        MainWindow.cpp
-        MainWindow.h
+# GLOB sources in subdirectories
+file(GLOB_RECURSE CORE_SRC "core/*.cpp" "core/*.h")
+file(GLOB_RECURSE WIDGETS_SRC "widgets/*.cpp" "widgets/*.h")
+
+# Manually list root sources
+set(ROOT_SRC
+    main.cpp
+    MainWindow.cpp
+    MainWindow.h
 )
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(crab-tool
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
-        MainImageWidget.cpp
-        MainImageWidget.h
-        ImageZoomWidget.cpp
+qt_add_executable(crab-tool
+    ${ROOT_SRC}
+    ${CORE_SRC}
+    ${WIDGETS_SRC}
+    resources.qrc
+)
 
-        ToolboxWidget.cpp
-        ToolboxWidget.h
-        SelectionRect.h SelectionRect.cpp
-
-
-        ImageZoomWidget.h
-
-
-
-        ImageListModel.h
-        ImageListModel.cpp
-        ImageFilterProxy.cpp
-        ImageFilterProxy.h
-        ImageDirOnlyProxy.h
-        ImageDirOnlyProxy.cpp
-        ImageItemDelegte.cpp
-        ImageItemDelegate.h
-        ImageNavigatorWidget.cpp
-        ImageNavigatorWidget.h
-        DirNavigatorWidget.h
-        DirNavigatorWidget.cpp
-        resources.qrc
-        ToolboxButtonWidget.cpp
-        ToolboxButtonWidget.h
-    )
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET CrabTool APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
-else()
-    if(ANDROID)
-        add_library(crab-tool SHARED
-            ${PROJECT_SOURCES}
-        )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-    else()
-        add_executable(crab-tool
-            ${PROJECT_SOURCES}
-        )
-    endif()
-endif()
+target_include_directories(crab-tool PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/widgets
+)
 
 target_link_libraries(crab-tool
-  PRIVATE
-  Qt${QT_VERSION_MAJOR}::Widgets
-  Qt${QT_VERSION_MAJOR}::Concurrent
+    PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Concurrent
 )
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
+# Platform-specific bundle stuff
 if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.crab-tool)
+    set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.crab-tool)
 endif()
+
 set_target_properties(crab-tool PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
@@ -97,6 +63,6 @@ install(TARGETS crab-tool
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-if(QT_VERSION_MAJOR EQUAL 6)
+if(${QT_VERSION} VERSION_LESS 6.5.0)
     qt_finalize_executable(crab-tool)
 endif()

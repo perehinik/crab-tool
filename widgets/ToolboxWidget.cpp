@@ -19,7 +19,7 @@ ToolboxWidget::ToolboxWidget(QWidget *parent) : QWidget(parent) {
     layout->setAlignment(Qt::AlignLeft);
     layout->setSpacing(0);
 
-    ToolboxButton *openFileButton = new ToolboxButton(QIcon(":/icon/file-add-fill.png"), "Open File", 32, 20, this);
+    ToolboxButton *openFileButton = new ToolboxButton(QIcon(":/icon/file-add-fill.png"), "Open File", 32, 24, this);
     connect(openFileButton->action, &QAction::triggered, this, &ToolboxWidget::onOpenFile);
 
     ToolboxButton *openDirButton = new ToolboxButton(QIcon(":/icon/folder-fill.png"), "Open Directory", 32, 24, this);
