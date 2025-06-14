@@ -1,5 +1,7 @@
-#include "ImageDirOnlyProxy.h"
 #include <QFileSystemModel>
+
+#include "Constants.h"
+#include "ImageDirOnlyProxy.h"
 
 bool ImageDirOnlyProxy::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const {
     QFileSystemModel *fsModel = qobject_cast<QFileSystemModel *>(sourceModel());
@@ -43,9 +45,8 @@ bool ImageDirOnlyProxy::directoryContainsImages(const QString &path) const {
     }
 
     QDir dir(path);
-    QStringList imageFilters = {"*.jpg", "*.jpeg", "*.png", "*.bmp", "*.gif", "*.webp"};
 
-    if (!dir.entryList(imageFilters, QDir::Files).isEmpty()) {
+    if (!dir.entryList(IMAGE_EXTENSION_FILTERS, QDir::Files).isEmpty()) {
         imageDirCache[path] = true;
         return true;
     }

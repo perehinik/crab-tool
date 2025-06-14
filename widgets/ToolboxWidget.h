@@ -1,8 +1,9 @@
 #ifndef TOOLBOXWIDGET_H
 #define TOOLBOXWIDGET_H
 
-#include "ToolboxButtonWidget.h"
 #include <QWidget>
+
+#include "ToolboxButtonWidget.h"
 
 class ToolboxWidget : public QWidget {
     Q_OBJECT

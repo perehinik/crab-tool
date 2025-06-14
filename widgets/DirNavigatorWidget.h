@@ -5,6 +5,7 @@
 #include <QGridLayout>
 #include <QTreeView>
 #include <QFileSystemModel>
+
 #include "ImageDirOnlyProxy.h"
 
 class DirNavigatorWidget : public QWidget {

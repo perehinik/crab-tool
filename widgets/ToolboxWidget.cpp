@@ -1,10 +1,11 @@
-#include "ToolboxWidget.h"
 #include <QPalette>
 #include <QGridLayout>
 #include <QToolButton>
 #include <QPushButton>
 #include <QFileDialog>
 #include <QCursor>
+
+#include "ToolboxWidget.h"
 #include "ToolboxButtonWidget.h"
 
 #define TOOLBOX_BUTTON_HEIGHT 30

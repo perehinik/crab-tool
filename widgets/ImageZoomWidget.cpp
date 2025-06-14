@@ -1,5 +1,6 @@
-#include "ImageZoomWidget.h"
 #include <QPalette>
+
+#include "ImageZoomWidget.h"
 
 ImageZoomWidget::ImageZoomWidget(QWidget *parent) : QWidget(parent) {
     // setFixedWidth(300);

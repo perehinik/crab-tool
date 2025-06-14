@@ -7,6 +7,7 @@
 #include <QWheelEvent>
 #include <QMouseEvent>
 #include <QScrollBar>
+
 #include "SelectionRect.h"
 
 class ImageWidget : public QGraphicsView {

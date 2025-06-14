@@ -1,8 +1,9 @@
-#include "ImageFilterProxy.h"
 #include <QFileSystemModel>
 
+#include "ImageFilterProxy.h"
+#include "Constants.h"
+
 bool ImageFilterProxy :: filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const {
-    QStringList imageExtensions = {"jpg", "jpeg", "png", "bmp", "gif", "webp"};
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
     QFileSystemModel *fsModel = qobject_cast<QFileSystemModel *>(sourceModel());
     if (!fsModel) {
@@ -14,5 +15,5 @@ bool ImageFilterProxy :: filterAcceptsRow(int sourceRow, const QModelIndex &sour
     }
     QString suffix = info.suffix().toLower();
 
-    return imageExtensions.contains(suffix, Qt::CaseInsensitive);
+    return IMAGE_EXTENSIONS.contains(suffix, Qt::CaseInsensitive);
 }

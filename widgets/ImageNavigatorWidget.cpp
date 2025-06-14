@@ -1,9 +1,11 @@
-#include "ImageNavigatorWidget.h"
 #include <QDirIterator>
 #include <QFileSystemModel>
 #include <QThreadPool>
 #include <QImageReader>
+
+#include "Constants.h"
 #include "ImageItemDelegate.h"
+#include "ImageNavigatorWidget.h"
 
 ImageNavigatorWidget::ImageNavigatorWidget(QWidget *parent) : QWidget(parent) {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -36,9 +38,8 @@ ImageNavigatorWidget::ImageNavigatorWidget(QWidget *parent) : QWidget(parent) {
 void ImageNavigatorWidget::setPath(QString dirPath) {
     this->dirPath = dirPath;
     QStringList imagePathList;
-    QStringList imageExtensions = {"*.jpg", "*.jpeg", "*.png", "*.bmp", "*.gif", "*.webp"};
 
-    QDirIterator it(dirPath, imageExtensions, QDir::Files);
+    QDirIterator it(dirPath, IMAGE_EXTENSION_FILTERS, QDir::Files);
     while (it.hasNext()) {
         QString filePath = it.next();
         imagePathList << filePath;

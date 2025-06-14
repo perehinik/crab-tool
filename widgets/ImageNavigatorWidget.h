@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QGridLayout>
 #include <QListView>
+
 #include "ImageListModel.h"
 
 #define PIXMAP_MAX_SIDE_SIZE 300

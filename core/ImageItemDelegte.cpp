@@ -1,6 +1,7 @@
-#include "ImageItemDelegate.h"
 #include <QPainter>
 #include <QApplication>
+
+#include "ImageItemDelegate.h"
 
 void ImageItemDelegate::paint(QPainter *p, const QStyleOptionViewItem &opt, const QModelIndex &index) const {
     QStyleOptionViewItem option(opt);  // make a modifiable copy

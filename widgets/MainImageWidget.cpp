@@ -1,9 +1,10 @@
-#include "MainImageWidget.h"
 #include <QPalette>
 #include <QPainter>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsEllipseItem>
 #include <QDebug>
+
+#include "MainImageWidget.h"
 
 ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(parent) {
     setAttribute(Qt::WA_StyledBackground, true);

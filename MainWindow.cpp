@@ -1,5 +1,6 @@
-#include "MainWindow.h"
 #include <QDockWidget>
+
+#include "MainWindow.h"
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 {

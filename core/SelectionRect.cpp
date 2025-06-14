@@ -1,6 +1,4 @@
-    #include "SelectionRect.h"
-
-
+#include "SelectionRect.h"
 
 SelectionRect::SelectionRect(QGraphicsScene *scene, const QRectF rect, qreal scale)
 {
@@ -47,7 +45,9 @@ void SelectionRect::setRect(QRectF rect)
     for (int i = 0; i < ellipses.size(); i++) {
         QPointF corner = corners[i];
         qreal circleSizeScaled = circleSize * scale;
-        QRectF circleRect(corner.x() - (circleSizeScaled / 2), corner.y() - (circleSizeScaled / 2), circleSizeScaled, circleSizeScaled);
+        qreal circleStartX = corner.x() - (circleSizeScaled / 2);
+        qreal circleStartY = corner.y() - (circleSizeScaled / 2);
+        QRectF circleRect(circleStartX, circleStartY, circleSizeScaled, circleSizeScaled);
         ellipses[i]->setRect(circleRect);
     }
 }
