@@ -40,10 +40,18 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 
     QObject::connect(imageNavigatorWidget, &ImageNavigatorWidget::onImageClicked, this, &MainWindow::onImageClicked);
 
+    imageZoomWidget = new ImageZoomWidget(this);
+    imageZoomDock = new QDockWidget("Image Zoom", this);
+    imageZoomDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    imageZoomDock->setWidget(imageZoomWidget);
+
+    QObject::connect(imageWidget, &ImageWidget::onMousePosChanged, imageZoomWidget, &ImageZoomWidget::centerOn);
+
     setMenuWidget(toolbox);
     setCentralWidget(imageWidget);
     addDockWidget(Qt::LeftDockWidgetArea, dirNavigatorDock);
     addDockWidget(Qt::LeftDockWidgetArea, imageNavigatorDock);
+    addDockWidget(Qt::RightDockWidgetArea, imageZoomDock);
 }
 
 void MainWindow::onDirOpen(QString dirPath)
@@ -74,6 +82,7 @@ void MainWindow::onPathChanged(QString dirPath)
 void MainWindow::onImageClicked(QString imagePath)
 {
     imageWidget->setImage(imagePath);
+    imageZoomWidget->setImage(imagePath);
 }
 
 void MainWindow::showEvent(QShowEvent *event) {

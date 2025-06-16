@@ -10,13 +10,17 @@
 
 #include "SelectionRect.h"
 
+#define MAIN_IMG_MAX_ZOOM 20
+#define MAIN_IMG_MIN_ZOOM 1
+#define MAIN_IMG_MIN_PIX_DENSITY 10 // Real pixels per 1 pixmap pixel when zoommed in.
+
 class ImageWidget : public QGraphicsView {
     Q_OBJECT
 
 public:
     explicit ImageWidget(QWidget *parent = nullptr, const QString imagePath = nullptr);
     void setImage(QString imagePath);
-    void setZoom(double factor, double newZoomLevel);
+    void setZoom(double newZoomLevel);
     void zoomIn();
     void zoomOut();
     void zoomToExtent();
@@ -30,7 +34,6 @@ protected:
     void checkZoom();
     void updateRect();
     int activateRectByPoint(QPointF point);
-    void setResized(bool isResized);
 
 private:
     QString imagePath;
@@ -38,7 +41,6 @@ private:
     QGraphicsPixmapItem *imageItem;
     double zoomLevel = 1.0;
     const double zoomStep = 1.15;
-    const double maxZoom = 100.0;
     bool resized = false;
     bool initialized = false;
 
@@ -48,6 +50,9 @@ private:
     QPixmap pixmap;
 
     QPen rectanglePen = QPen(Qt::green, 20);
+
+signals:
+    void onMousePosChanged(QPointF position);
 };
 
 #endif // MAINIMAGEWIDGET_H

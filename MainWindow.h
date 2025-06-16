@@ -28,8 +28,9 @@ private:
     ImageNavigatorWidget *imageNavigatorWidget;
     QDockWidget *imageNavigatorDock;
     QDockWidget *dirNavigatorDock;
+    QDockWidget *imageZoomDock;
     ImageWidget *imageWidget;
-    ImageZoomWidget *navigatorWidget;
+    ImageZoomWidget *imageZoomWidget;
 
     void showEvent(QShowEvent *event);
     void onDirOpen(QString dirPath);

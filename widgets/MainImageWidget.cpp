@@ -17,10 +17,11 @@ ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(par
     setRenderHint(QPainter::SmoothPixmapTransform);
     setDragMode(QGraphicsView::NoDrag);
     setImage(imagePath);
+
+    setMouseTracking(true);
 }
 
 void ImageWidget::setImage(QString imagePath) {
-    setResized(false);
     rectangleList.clear();
     currentRect = nullptr;
     scene->clear();
@@ -33,6 +34,7 @@ void ImageWidget::setImage(QString imagePath) {
         scene->setSceneRect(pixmap.rect());
         initialized = true;
     }
+    zoomToExtent();
 }
 
 void ImageWidget::checkZoom() {
@@ -43,7 +45,7 @@ void ImageWidget::checkZoom() {
     QRectF viewBounds = mapToScene(viewport()->rect()).boundingRect();
     QRectF sceneBounds = scene->sceneRect();
 
-    if (sceneBounds.width() <= viewBounds.width() * 3) {
+    if (transform().m11() < 2) {
         // Use better transformation for zoomed out to get better image
         imageItem->setTransformationMode(Qt::SmoothTransformation);
     } else {
@@ -52,17 +54,7 @@ void ImageWidget::checkZoom() {
     }
 
     if (viewBounds.contains(sceneBounds)) {
-        setResized(false);
-    }
-}
-
-void ImageWidget::setResized(bool isResized) {
-    if (isResized) {
-        this->resized = true;
-    } else {
-        this->resized = false;
-        zoomLevel = 1.0;
-        fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
+        zoomToExtent();
     }
 }
 
@@ -72,47 +64,50 @@ void ImageWidget::resizeEvent(QResizeEvent *event) {
         return;
     }
     if (scene && scene->sceneRect().isValid() && !resized) {
-        setResized(false);
+        zoomToExtent();
     }
     checkZoom();
     updateRect();
 }
 
-void ImageWidget::setZoom(double factor, double newZoomLevel) {
-    // Clamp zoom level to reasonable range
-    if (newZoomLevel > maxZoom) {return;}
-
-    // Apply zoom
-    scale(factor, factor);
-    setResized(std::round(newZoomLevel * 100) / 100 > 1.0);
+void ImageWidget::setZoom(double newZoomLevel) {
+    fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
     zoomLevel = newZoomLevel;
+    if (std::round(zoomLevel * 1000) == 1000) {
+        this->resized = false;
+        return;
+    }
+    this->resized = true;
+    newZoomLevel = newZoomLevel > MAIN_IMG_MAX_ZOOM ? MAIN_IMG_MAX_ZOOM : newZoomLevel;
+    newZoomLevel = newZoomLevel < MAIN_IMG_MIN_ZOOM ? MAIN_IMG_MIN_ZOOM : newZoomLevel;
+    // P5ixel density divided by miniumum transformation
+    qreal scaleMax = MAIN_IMG_MIN_PIX_DENSITY / transform().m11();
+    // Calculate new scale using logarithmic interpolation
+    qreal newScale = std::pow(scaleMax, (newZoomLevel - MAIN_IMG_MIN_ZOOM) / (MAIN_IMG_MAX_ZOOM - MAIN_IMG_MIN_ZOOM));
+    // Calculate new scale using linear interpolation
+    //qreal newScale = 1 + (newZoomLevel - MAIN_IMG_MIN_ZOOM) * (scaleMax - 1) / (MAIN_IMG_MAX_ZOOM - MAIN_IMG_MIN_ZOOM);
+
+    scale(newScale, newScale);
 
     // Prevent zooming out beyond full-scene view
     checkZoom();
-    // rectanglePen.setWidth(2*zoomLevel);
     updateRect();
 }
 
 void ImageWidget::zoomIn() {
-    double factor = zoomStep;
-    double newZoomLevel = zoomLevel * factor;
-    setZoom(factor, newZoomLevel);
+    setZoom(zoomLevel + 1);
 }
 
 void ImageWidget::zoomOut() {
-    double factor = 1.0 / zoomStep;
-    double newZoomLevel = zoomLevel * factor;
-    setZoom(factor, newZoomLevel);
+    setZoom(zoomLevel - 1);
 }
 
 void ImageWidget::zoomToExtent() {
-    double factor = 1.0 / zoomStep;
-    double newZoomLevel = 1;
-    setZoom(factor, newZoomLevel);
+    setZoom(1);
 }
 
 void ImageWidget::wheelEvent(QWheelEvent *event) {
-    if (!initialized) {
+    if (!initialized || event->angleDelta().x() != 0) {
         return;
     }
     // Get position in scene coordinates under cursor
@@ -158,21 +153,27 @@ void ImageWidget::mousePressEvent(QMouseEvent *event) {
 }
 
 void ImageWidget::mouseMoveEvent(QMouseEvent *event) {
+    QGraphicsView::mouseMoveEvent(event);
+    if (!initialized) {
+        return;
+    }
+
+    QPointF currentPos = mapToScene(event->pos());
+    QSize imageSize = imageItem->pixmap().size();
+    int imageWidth = imageSize.width();
+    int imageHeight = imageSize.height();
+
+    if (currentPos.x() < 0) { currentPos.setX(0); }
+    if (currentPos.y() < 0) { currentPos.setY(0); }
+    if (currentPos.x() > imageWidth) { currentPos.setX(imageWidth); }
+    if (currentPos.y() > imageHeight) { currentPos.setY(imageHeight); }
+
     if (currentRect) {
-        QPointF currentPos = mapToScene(event->pos());
-        QSize imageSize = imageItem->pixmap().size();
-        int imageWidth = imageSize.width();
-        int imageHeight = imageSize.height();
-
-        if (currentPos.x() < 0) { currentPos.setX(0); }
-        if (currentPos.y() < 0) { currentPos.setY(0); }
-        if (currentPos.x() > imageWidth) { currentPos.setX(imageWidth); }
-        if (currentPos.y() > imageHeight) { currentPos.setY(imageHeight); }
-
         QRectF newRect(startPos, currentPos);
         currentRect->setRect(newRect.normalized());
     }
-    QGraphicsView::mouseMoveEvent(event);
+
+    emit onMousePosChanged(currentPos);
 }
 
 void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
