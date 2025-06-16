@@ -81,6 +81,9 @@ ImageZoomWidget::ImageZoomWidget(QWidget *parent) : QWidget(parent) {
 }
 
 void ImageZoomWidget::setImage(QString imagePath) {
+    if (positionTarget) {
+        positionTarget->removeFromScene();
+    }
     scene->clear();
     initialized = false;
     pixmap = QPixmap(imagePath);
@@ -95,18 +98,41 @@ void ImageZoomWidget::setImage(QString imagePath) {
         setZoom(zoomLevel);
         initialized = true;
 
+        positionTarget = new PositionTarget(scene, pixmap.size(), QPointF(0, 0), 6);
+        QPointF targetPos = QPointF(static_cast<qreal>(scene->width()) / 2, static_cast<qreal>(scene->height()) / 2);
+        updatePositionTarget(targetPos);
+
         QTimer::singleShot(0, this, [this]() {
             this->resizeEvent(nullptr);
+            setZoom(zoomLevel);
         });
     }
 
     repaint();
 }
 
+void ImageZoomWidget::updatePositionTarget(QPointF pos, qreal targetScale) {
+    qDebug() << targetScale;
+
+    if (positionTarget && scene && !pixmap.isNull() && pixmap.width() > 0 && width() > 0) {
+        if (std::round(targetScale * 1000) <= 0) {
+            targetScale = 1.0 / (static_cast<qreal>(width()) / static_cast<qreal>(pixmap.width()));
+        }
+
+        positionTarget->setScale(targetScale);
+        if (!pos.isNull()) {
+            positionTarget->setPosition(pos);
+        }
+    }
+}
+
 void ImageZoomWidget::setZoom(double newZoomLevel) {
     view->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
     zoomLevel = newZoomLevel;
+
     if (std::round(zoomLevel * 1000) == 1000) {
+        QPointF targetPos = QPointF(static_cast<qreal>(pixmap.width()) / 2, static_cast<qreal>(pixmap.height()) / 2);
+        updatePositionTarget(targetPos);
         return;
     }
     qreal trans = view->transform().m11();
@@ -115,12 +141,15 @@ void ImageZoomWidget::setZoom(double newZoomLevel) {
     qreal newScale = std::pow(scaleMax, (newZoomLevel - slider->minimum()) / (slider->maximum() - slider->minimum()));
 
     view->scale(newScale, newScale);
-
-    // updateCross();
+    QPointF targetPos = QPointF(static_cast<qreal>(scene->width()) / 2, static_cast<qreal>(scene->height()) / 2);
+    updatePositionTarget(targetPos, 1.0 / (trans * newScale));
 }
 
 void ImageZoomWidget::centerOn(QPointF position) {
     view->centerOn(position);
+    if (positionTarget && !pixmap.isNull()) {
+        positionTarget->setPosition(position);
+    }
 }
 
 void ImageZoomWidget::zoomIn() {
@@ -149,6 +178,8 @@ void ImageZoomWidget::resizeEvent(QResizeEvent *event) {
     if (std::round(zoomLevel * 1000) == 1000) {
         view->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
     }
+    QPointF targetPos = QPointF(static_cast<qreal>(scene->width()) / 2, static_cast<qreal>(scene->height()) / 2);
+    updatePositionTarget(targetPos, 1.0 / view->transform().m11());
 }
 
 void ImageZoomWidget::onSliderValueChanged(int value) {
