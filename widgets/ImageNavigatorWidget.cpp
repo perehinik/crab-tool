@@ -11,13 +11,12 @@ ImageNavigatorWidget::ImageNavigatorWidget(QWidget *parent) : QWidget(parent) {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     setMinimumWidth(180);
 
-    QLayout *mainLayout = new QGridLayout();
-    setLayout(mainLayout);
+    QLayout *mainLayout = new QGridLayout(this);
 
-    model = new ImageListModel;
+    model = new ImageListModel(this);
     model->defaultPixmap = QPixmap(":/icon/image-wide.png");
 
-    view = new QListView;
+    view = new QListView(this);
     view->setModel(model);
     view->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     view->setItemDelegate(new ImageItemDelegate(view));
@@ -68,6 +67,11 @@ void ImageNavigatorWidget::loadItems(QStringList imagePathList) {
     for (int i = 0; i < imagePathList.length(); i++) {
         QThreadPool::globalInstance()->start([=]() {
             QString imagePath = imagePathList[i];
+            if (!imagePath.contains(this->dirPath)) {
+                // Directory has changed during loading.
+                return;
+            }
+
             // First load scaled image with fast transformation
             // Resolution should be a bit better than one that will be finally used
             QImageReader reader(imagePath);

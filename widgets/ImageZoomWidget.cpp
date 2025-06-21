@@ -81,10 +81,6 @@ ImageZoomWidget::ImageZoomWidget(QWidget *parent) : QWidget(parent) {
 }
 
 void ImageZoomWidget::setImage(QString imagePath) {
-    if (positionTarget) {
-        positionTarget->removeFromScene();
-    }
-    scene->clear();
     initialized = false;
     pixmap = QPixmap(imagePath);
     if (!pixmap) {
@@ -92,28 +88,33 @@ void ImageZoomWidget::setImage(QString imagePath) {
         pixmap.fill(QColor(204, 204, 204));
     }
     if (!pixmap.isNull()) {
-        imageItem = scene->addPixmap(pixmap);
+        if (imageItem) {
+            imageItem->setPixmap(pixmap);
+        } else {
+            imageItem = scene->addPixmap(pixmap);
+        }
         imageItem->setPos(0, 0);
+        view->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
         scene->setSceneRect(pixmap.rect());
-        setZoom(zoomLevel);
-        initialized = true;
+        setZoom(1);
 
-        positionTarget = new PositionTarget(scene, pixmap.size(), QPointF(0, 0), 6);
+        if (positionTarget) {
+            positionTarget->updateSceneSize(pixmap.size());
+        } else {
+            positionTarget = new PositionTarget(scene, pixmap.size(), QPointF(0, 0), 6);
+        }
         QPointF targetPos = QPointF(static_cast<qreal>(scene->width()) / 2, static_cast<qreal>(scene->height()) / 2);
         updatePositionTarget(targetPos);
 
-        QTimer::singleShot(0, this, [this]() {
-            this->resizeEvent(nullptr);
-            setZoom(zoomLevel);
+        QTimer::singleShot(10, this, [this]() {
+            this->setZoom(slider->value());
         });
+        initialized = true;
     }
-
     repaint();
 }
 
 void ImageZoomWidget::updatePositionTarget(QPointF pos, qreal targetScale) {
-    qDebug() << targetScale;
-
     if (positionTarget && scene && !pixmap.isNull() && pixmap.width() > 0 && width() > 0) {
         if (std::round(targetScale * 1000) <= 0) {
             targetScale = 1.0 / (static_cast<qreal>(width()) / static_cast<qreal>(pixmap.width()));
@@ -184,4 +185,8 @@ void ImageZoomWidget::resizeEvent(QResizeEvent *event) {
 
 void ImageZoomWidget::onSliderValueChanged(int value) {
     setZoom(static_cast<qreal>(value));
+}
+
+ImageZoomWidget::~ImageZoomWidget() {
+    delete positionTarget;
 }

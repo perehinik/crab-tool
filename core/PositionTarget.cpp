@@ -5,10 +5,14 @@ PositionTarget::PositionTarget(QGraphicsScene *scene, QSizeF size, QPointF posit
     sceneSize = size;
     vLineRect = scene->addRect(position.x() - 1, 0, 1, sceneSize.height(), linePen, lineBrush);
     hLineRect = scene->addRect(0, position.y() - 1, sceneSize.width(), 1, linePen, lineBrush);
+    vLineRect->setZValue(1000);
+    hLineRect->setZValue(1000);
 }
 
 void PositionTarget::updateSceneSize(QSizeF size) {
     sceneSize = size;
+    if (position.x() > size.width()) {position.setX(size.width());}
+    if (position.y() > size.height()) {position.setX(size.height());}
     setPosition(position);
 }
 
@@ -19,6 +23,10 @@ void PositionTarget::removeFromScene() {
     if (hLineRect && hLineRect->scene()) {
         hLineRect->scene()->removeItem(hLineRect);
     }
+    delete vLineRect;
+    delete hLineRect;
+    vLineRect = nullptr;
+    hLineRect = nullptr;
 }
 
 void PositionTarget::setPosition(QPointF pos) {
@@ -28,7 +36,6 @@ void PositionTarget::setPosition(QPointF pos) {
 }
 
 void PositionTarget::setScale(qreal scale) {
-    qDebug() << "scale:" << scale;
     this->scale = scale;
     linePen.setWidthF(lineWidth * scale);
     vLineRect->setPen(linePen);

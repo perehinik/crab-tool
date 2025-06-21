@@ -1,7 +1,6 @@
 #include "SelectionRect.h"
 
-SelectionRect::SelectionRect(QGraphicsScene *scene, const QRectF rect, qreal scale)
-{
+SelectionRect::SelectionRect(QGraphicsScene *scene, const QRectF rect, qreal scale) {
     this->scale = scale;
     graphicsRect = scene->addRect(rect, linePen);
     corners = {
@@ -24,16 +23,21 @@ SelectionRect::SelectionRect(QGraphicsScene *scene, const QRectF rect, qreal sca
     }
 }
 
-void SelectionRect::removeFromScene(QGraphicsScene *scene)
-{
-    scene->removeItem(graphicsRect);
+void SelectionRect::removeFromScene() {
+    if (graphicsRect && graphicsRect->scene()) {
+        graphicsRect->scene()->removeItem(graphicsRect);
+    }
+    delete graphicsRect;
+    graphicsRect = nullptr;
     for (int i = 0; i < ellipses.size(); i++) {
-        scene->removeItem(ellipses[i]);
+        if (ellipses[i] && ellipses[i]->scene()) {
+            ellipses[i]->scene()->removeItem(ellipses[i]);
+        }
+        delete ellipses[i];
     }
 }
 
-void SelectionRect::setRect(QRectF rect)
-{
+void SelectionRect::setRect(QRectF rect) {
     // Update rectangle
     graphicsRect->setRect(rect);
     // Update circles
@@ -52,21 +56,18 @@ void SelectionRect::setRect(QRectF rect)
     }
 }
 
-QRectF SelectionRect::getRect()
-{
+QRectF SelectionRect::getRect() {
     return graphicsRect->rect();
 }
 
-void SelectionRect::setScale(qreal scale)
-{
+void SelectionRect::setScale(qreal scale) {
     this->scale = scale;
     setRect(graphicsRect->rect());
     linePen.setWidthF(lineWidth * scale);
     graphicsRect->setPen(linePen);
 }
 
-QPointF *SelectionRect::getCornerPoint(QPointF point)
-{
+QPointF *SelectionRect::getCornerPoint(QPointF point) {
     for (int i = 0; i < corners.size(); i++) {
         if (abs(QLineF(corners[i], point).length()) < circleSize / 2 * scale) {
             return &corners[i];
@@ -75,8 +76,7 @@ QPointF *SelectionRect::getCornerPoint(QPointF point)
     return nullptr;
 }
 
-QPointF *SelectionRect::getOppositePoint(QPointF point)
-{
+QPointF *SelectionRect::getOppositePoint(QPointF point) {
     for (int i = 0; i < corners.size(); i++) {
         if (std::round(corners[i].x() * 10000) != std::round(point.x() * 10000) &&
             std::round(corners[i].y() * 10000) != std::round(point.y() * 10000)) {
@@ -94,10 +94,13 @@ QPointF *SelectionRect::getOppositePoint(QPointF point)
     return &corners[0];
 }
 
-qreal SelectionRect::getVisibleArea()
-{
+qreal SelectionRect::getVisibleArea() {
     QRectF rect = getRect();
     qreal vertical = QLineF(rect.topLeft(), rect.topRight()).length() / scale;
     qreal horisontal = QLineF(rect.topLeft(), rect.bottomLeft()).length() / scale;
     return vertical * horisontal;
+}
+
+SelectionRect::~SelectionRect(){
+    removeFromScene();
 }

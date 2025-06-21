@@ -4,7 +4,7 @@
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
 {
-    toolbox = new ToolboxWidget();
+    toolbox = new ToolboxWidget(this);
     connect(toolbox->handToolButton, &QToolButton::toggled, this, &MainWindow::onMoveChanged);
 
     QObject::connect(toolbox, &ToolboxWidget::onDirOpen, this, &MainWindow::onDirOpen);

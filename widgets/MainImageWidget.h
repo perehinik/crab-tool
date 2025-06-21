@@ -24,6 +24,8 @@ public:
     void zoomIn();
     void zoomOut();
     void zoomToExtent();
+    void clear();
+    ~ImageWidget();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

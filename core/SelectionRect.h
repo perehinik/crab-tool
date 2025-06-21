@@ -15,7 +15,8 @@ public:
     QPointF *getOppositePoint(QPointF point);
     QRectF getRect();
     qreal getVisibleArea();
-    void removeFromScene(QGraphicsScene *scene);
+    void removeFromScene();
+    ~SelectionRect();
 
 private:
     QGraphicsRectItem *graphicsRect = nullptr;

@@ -2,7 +2,6 @@
 #include <QPainter>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsEllipseItem>
-#include <QDebug>
 
 #include "MainImageWidget.h"
 
@@ -21,11 +20,19 @@ ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(par
     setMouseTracking(true);
 }
 
-void ImageWidget::setImage(QString imagePath) {
-    rectangleList.clear();
+void ImageWidget::clear() {
+    delete currentRect;
     currentRect = nullptr;
     scene->clear();
+    for (int i=0;i < rectangleList.length(); i++) {
+        delete rectangleList[i];
+    }
+    rectangleList.clear();
     initialized = false;
+}
+
+void ImageWidget::setImage(QString imagePath) {
+    clear();
     pixmap = QPixmap(imagePath);
     if (!pixmap.isNull()) {
         imageItem = scene->addPixmap(pixmap);
@@ -184,7 +191,7 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
         }
         if (rectangleList.contains(currentRect) && currentRect->getVisibleArea() < 60) {
             rectangleList.removeAll(currentRect);
-            currentRect->removeFromScene(scene);
+            delete currentRect;
         }
         currentRect = nullptr;
     }
@@ -213,4 +220,8 @@ int ImageWidget::activateRectByPoint(QPointF point) {
         }
     }
     return currentRect ? 0 : -1;
+}
+
+ImageWidget::~ImageWidget() {
+    clear();
 }

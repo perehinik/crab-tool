@@ -22,19 +22,20 @@ public:
     void setZoom(double newZoomLevel);
     void setPosition(QPointF position);
     void centerOn(QPointF position);
+    ~ImageZoomWidget();
 
 private:
-    QString imagePath;
-    QGridLayout *layout;
-    QGraphicsView *view;
-    QGraphicsScene *scene;
-    QGraphicsPixmapItem *imageItem;
+    QString imagePath = nullptr;
+    QGridLayout *layout = nullptr;
+    QGraphicsView *view = nullptr;
+    QGraphicsScene *scene = nullptr;
+    QGraphicsPixmapItem *imageItem = nullptr;
     double zoomLevel = 1.0;
     bool initialized = false;
     QPixmap pixmap;
-    ToolboxButton *zoomOutButton;
-    ToolboxButton *zoomInButton;
-    QSlider *slider;
+    ToolboxButton *zoomOutButton = nullptr;
+    ToolboxButton *zoomInButton = nullptr;
+    QSlider *slider = nullptr;
     PositionTarget *positionTarget = nullptr;
 
     void resizeEvent(QResizeEvent *event) override;
