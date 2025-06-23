@@ -44,14 +44,23 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
     imageZoomDock = new QDockWidget("Image Zoom", this);
     imageZoomDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     imageZoomDock->setWidget(imageZoomWidget);
+    imageZoomWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    imageZoomDock->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     QObject::connect(imageWidget, &ImageWidget::onMousePosChanged, imageZoomWidget, &ImageZoomWidget::centerOn);
+    parametersTableWidget = new ParametersTable(this);
+    parametersTableWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+    parametersTableDock = new QDockWidget("Parameters", this);
+    parametersTableDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    parametersTableDock->setWidget(parametersTableWidget);
+    parametersTableDock->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
 
     setMenuWidget(toolbox);
     setCentralWidget(imageWidget);
     addDockWidget(Qt::LeftDockWidgetArea, dirNavigatorDock);
     addDockWidget(Qt::LeftDockWidgetArea, imageNavigatorDock);
     addDockWidget(Qt::RightDockWidgetArea, imageZoomDock);
+    addDockWidget(Qt::RightDockWidgetArea, parametersTableDock);
 }
 
 void MainWindow::onDirOpen(QString dirPath)

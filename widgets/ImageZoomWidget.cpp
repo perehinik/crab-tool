@@ -21,7 +21,6 @@ ImageZoomWidget::ImageZoomWidget(QWidget *parent) : QWidget(parent) {
     view->setRenderHint(QPainter::Antialiasing);
     view->setRenderHint(QPainter::SmoothPixmapTransform);
     view->setDragMode(QGraphicsView::NoDrag);
-    view->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
@@ -74,10 +73,12 @@ ImageZoomWidget::ImageZoomWidget(QWidget *parent) : QWidget(parent) {
 
     layout->setRowStretch(0, 0);
     layout->setRowStretch(1, 0);
-    // Add a dummy third row to consume space
-    layout->setRowStretch(2, 1);
 
     setImage(imagePath);
+}
+
+QSize ImageZoomWidget::sizeHint() const {
+    return QSize(width(), view->height() + zoomInButton->height());
 }
 
 void ImageZoomWidget::setImage(QString imagePath) {
@@ -94,8 +95,8 @@ void ImageZoomWidget::setImage(QString imagePath) {
             imageItem = scene->addPixmap(pixmap);
         }
         imageItem->setPos(0, 0);
-        view->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
         scene->setSceneRect(pixmap.rect());
+        view->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
         setZoom(1);
 
         if (positionTarget) {
@@ -107,7 +108,7 @@ void ImageZoomWidget::setImage(QString imagePath) {
         updatePositionTarget(targetPos);
 
         QTimer::singleShot(10, this, [this]() {
-            this->setZoom(slider->value());
+            this->resizeEvent(nullptr);
         });
         initialized = true;
     }
@@ -181,6 +182,7 @@ void ImageZoomWidget::resizeEvent(QResizeEvent *event) {
     }
     QPointF targetPos = QPointF(static_cast<qreal>(scene->width()) / 2, static_cast<qreal>(scene->height()) / 2);
     updatePositionTarget(targetPos, 1.0 / view->transform().m11());
+    this->setZoom(slider->value());
 }
 
 void ImageZoomWidget::onSliderValueChanged(int value) {

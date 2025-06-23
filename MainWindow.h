@@ -11,6 +11,7 @@
 #include "MainImageWidget.h"
 #include "ImageZoomWidget.h"
 #include "ToolboxWidget.h"
+#include "ParametersTable.h"
 
 class MainWindow : public QMainWindow
 {
@@ -31,8 +32,10 @@ private:
     QDockWidget *imageZoomDock;
     ImageWidget *imageWidget;
     ImageZoomWidget *imageZoomWidget;
+    ParametersTable *parametersTableWidget;
+    QDockWidget *parametersTableDock;
 
-    void showEvent(QShowEvent *event);
+    void showEvent(QShowEvent *event) override;
     void onDirOpen(QString dirPath);
     void onFilesOpen(QStringList filePathList);
     void onMoveChanged();

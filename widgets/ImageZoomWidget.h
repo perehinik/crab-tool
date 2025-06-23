@@ -22,6 +22,7 @@ public:
     void setZoom(double newZoomLevel);
     void setPosition(QPointF position);
     void centerOn(QPointF position);
+    QSize sizeHint() const override;
     ~ImageZoomWidget();
 
 private:
