@@ -20,12 +20,18 @@ class ImageWidget : public QGraphicsView {
 
 public:
     explicit ImageWidget(QWidget *parent = nullptr, const QString imagePath = nullptr);
+
+    QString imagePath;
+
     void setImage(QString imagePath);
     void setZoom(double newZoomLevel);
     void zoomIn();
     void zoomOut();
     void zoomToExtent();
     void clear();
+    QJsonObject toJson();
+    void fromJson(const QJsonObject &json);
+    int selectionCount();
     ~ImageWidget();
 
 protected:
@@ -40,7 +46,6 @@ protected:
     void activateRect(SelectionRect * rect);
 
 private:
-    QString imagePath;
     QGraphicsScene *scene = nullptr;
     QGraphicsPixmapItem *imageItem = nullptr;
     double zoomLevel = 1.0;

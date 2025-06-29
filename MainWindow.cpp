@@ -1,4 +1,5 @@
 #include <QDockWidget>
+#include <QJsonObject>
 
 #include "MainWindow.h"
 
@@ -93,8 +94,14 @@ void MainWindow::onPathChanged(QString dirPath)
 
 void MainWindow::onImageClicked(QString imagePath)
 {
+    if (imageWidget->selectionCount() > 0) {
+        rootJson[imageWidget->imagePath] = imageWidget->toJson();
+    }
     imageWidget->setImage(imagePath);
     imageZoomWidget->setImage(imagePath);
+    if (rootJson.contains(imagePath)) {
+        imageWidget->fromJson(rootJson[imagePath].toObject());
+    }
 }
 
 void MainWindow::showEvent(QShowEvent *event) {

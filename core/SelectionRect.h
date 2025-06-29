@@ -8,6 +8,7 @@ class SelectionRect
 {
 public:
     SelectionRect(QGraphicsScene *scene, const QRectF rect, qreal scale = 6);
+    SelectionRect(QGraphicsScene *scene, const QJsonObject &json, qreal scale = 6);
     QStringList tags;
     QPointF *getCornerPoint(QPointF point);
     QPointF *getOppositePoint(QPointF point);
@@ -19,6 +20,9 @@ public:
     void removeFromScene();
     void deactivate();
     void activate();
+    void buildCorners(QGraphicsScene *scene, QRectF rect);
+    QJsonObject toJson();
+    void fromJson(const QJsonObject &json);
     ~SelectionRect();
 
 private:

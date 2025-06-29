@@ -1,8 +1,23 @@
 #include "SelectionRect.h"
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QPoint>
 
 SelectionRect::SelectionRect(QGraphicsScene *scene, const QRectF rect, qreal scale) {
     this->scale = scale;
     graphicsRect = scene->addRect(rect, linePen);
+    buildCorners(scene, rect);
+}
+
+SelectionRect::SelectionRect(QGraphicsScene *scene, const QJsonObject &json, qreal scale) {
+    this->scale = scale;
+    QRectF rect = QRectF(0, 0, 1, 1);
+    this->graphicsRect = scene->addRect(rect, linePen);
+    buildCorners(scene, rect);
+    fromJson(json);
+}
+
+void SelectionRect::buildCorners(QGraphicsScene *scene, QRectF rect) {
     corners = {
         rect.topLeft(), rect.topRight(),
         rect.bottomLeft(), rect.bottomRight()
@@ -40,6 +55,46 @@ void SelectionRect::removeFromScene() {
             ellipses[i] = nullptr;
         }
     }
+}
+
+QJsonObject SelectionRect::toJson() {
+    QJsonObject obj;
+
+    obj["type"] = "selection-corners-rect";
+
+    QRectF r = getRect();
+    obj["x-top-left"] = r.topLeft().x();
+    obj["y-top-left"] = r.topLeft().y();
+    obj["x-bot-right"] = r.bottomRight().x();
+    obj["y-bot-right"] = r.bottomRight().y();
+
+    QJsonArray tagArray;
+    for (int i = 0; i < tags.length(); i++) {
+        tagArray.append(tags[i]);
+    }
+    obj["tags"] = tagArray;
+
+    return obj;
+}
+
+void SelectionRect::fromJson(const QJsonObject &json) {
+    if (json["type"].toString() != "selection-corners-rect") {
+        return;
+    }
+    QRectF rect(
+        QPointF(json["x-top-left"].toDouble(), json["y-top-left"].toDouble()),
+        QPointF(json["x-bot-right"].toDouble(), json["y-bot-right"].toDouble())
+        );
+
+    QJsonArray tagArray = json["tags"].toArray();
+    for (int i = 0; i < tagArray.size(); ++i) {
+        const QJsonValue &value = tagArray.at(i);
+        if (value.isString()) {
+            tags.append(value.toString());
+        }
+    }
+
+    setRect(rect);
 }
 
 void SelectionRect::setRect(QRectF rect) {

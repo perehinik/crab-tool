@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QJsonObject>
 
 #include "DirNavigatorWidget.h"
 #include "ImageNavigatorWidget.h"
@@ -24,6 +25,7 @@ public:
     ~MainWindow();
 
 private:
+    QJsonObject rootJson;
     ToolboxWidget *toolbox;
     DirNavigatorWidget *dirNavigatorWidget;
     ImageNavigatorWidget *imageNavigatorWidget;

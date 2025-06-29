@@ -3,7 +3,10 @@
 #include <QGraphicsPixmapItem>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsProxyWidget>
-#include <qapplication.h>
+#include <QApplication>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QFileInfo>
 
 #include "MainImageWidget.h"
 
@@ -22,6 +25,37 @@ ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(par
     createSelectionPopup();
 
     setMouseTracking(true);
+}
+
+QJsonObject ImageWidget::toJson() {
+    QJsonObject obj;
+
+    obj["type"] = "image-data";
+    obj["image-path"] = imagePath;
+    obj["image-filename"] = QFileInfo(imagePath).fileName();
+
+    QJsonArray rectArray;
+    for (int i = 0; i < rectangleList.length(); ++i) {
+        if (rectangleList[i]) {
+            rectArray.append(rectangleList[i]->toJson());
+        }
+    }
+    obj["selection-list"] = rectArray;
+    return obj;
+}
+
+void ImageWidget::fromJson(const QJsonObject &json) {
+    if (json["type"].toString() != "image-data") {
+        return;
+    }
+    if (json["image-path"].toString() != imagePath) {
+        setImage(json["image-path"].toString());
+    }
+    QJsonArray rectArray = json["selection-list"].toArray();
+    for (int i = 0; i < rectArray.size(); ++i) {
+        QJsonObject jsonObj = rectArray.at(i).toObject();
+        rectangleList.append(new SelectionRect(scene, jsonObj, (qreal)1.0 / transform().m11()));
+    }
 }
 
 void ImageWidget::clear() {
@@ -81,6 +115,7 @@ void ImageWidget::setImage(QString imagePath) {
         // imageItem->setTransformationMode(Qt::SmoothTransformation);
         imageItem->setPos(0, 0);
         scene->setSceneRect(pixmap.rect());
+        this->imagePath = imagePath;
         initialized = true;
     }
     zoomToExtent();
@@ -310,6 +345,10 @@ void ImageWidget::selectionPopupDelete() {
     delete activatedRect;
     activateRect(nullptr);
     selectionPopupProxy->setVisible(false);
+}
+
+int ImageWidget::selectionCount() {
+    return rectangleList.length();
 }
 
 ImageWidget::~ImageWidget() {
