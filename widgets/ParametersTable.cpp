@@ -35,6 +35,9 @@ void ParametersTable::setSelection(SelectionRect * selection) {
     if (currentSelection && !objectsEdit->values().isEmpty()) {
         currentSelection->tags = objectsEdit->values();
     }
+    if (currentSelection) {
+        currentSelection->deactivate();
+    }
 
     clear();
     currentSelection = selection;
@@ -42,6 +45,7 @@ void ParametersTable::setSelection(SelectionRect * selection) {
         setEnabled(false);
         return;
     }
+    selection->activate();
     setEnabled(true);
     if (!selection->tags.isEmpty()) {
         objectsEdit->setValues(selection->tags);

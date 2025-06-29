@@ -25,15 +25,14 @@ ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(par
 }
 
 void ImageWidget::clear() {
-    delete currentRect;
-    currentRect = nullptr;
-    scene->clear();
-    selectionPopup = nullptr;
-    selectionPopupProxy = nullptr;
-    for (int i=0;i < rectangleList.length(); i++) {
+    for (int i = 0; i < rectangleList.length(); i++) {
         delete rectangleList[i];
     }
+    scene->clear();
     rectangleList.clear();
+    selectionPopup = nullptr;
+    selectionPopupProxy = nullptr;
+    currentRect = nullptr;
     initialized = false;
 }
 
@@ -252,9 +251,9 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
             rectangleList.append(currentRect);
         }
         if (currentRect->getVisibleArea() < 60) {
+            emit onSelectionChanged(nullptr);
             rectangleList.removeAll(currentRect);
             delete currentRect;
-            emit onSelectionChanged(nullptr);
         }
         currentRect = nullptr;
     }
@@ -286,18 +285,20 @@ SelectionRect * ImageWidget::getRectByPoint(QPointF point) {
     return activatedRect;
 }
 
-int ImageWidget::activateRectByPoint(QPointF point) {
+void ImageWidget::activateRectByPoint(QPointF point) {
     currentRect = getRectByPoint(point);
-    return currentRect ? 0 : -1;
 }
 
 void ImageWidget::selectionPopupDelete() {
     SelectionRect * activatedRect = getRectByPoint(latestPressPos);
     if (activatedRect) {
-        rectangleList.removeAll(activatedRect);
-        delete activatedRect;
-        currentRect = nullptr;
         emit onSelectionChanged(nullptr);
+        if (rectangleList.removeOne(activatedRect)) {
+            delete activatedRect;
+        }
+        if (currentRect == activatedRect) {
+            currentRect = nullptr;
+        }
     }
     selectionPopupProxy->setVisible(false);
 }

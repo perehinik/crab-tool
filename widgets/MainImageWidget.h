@@ -36,7 +36,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void checkZoom();
     void updateRect();
-    int activateRectByPoint(QPointF point);
+    void activateRectByPoint(QPointF point);
 
 private:
     QString imagePath;

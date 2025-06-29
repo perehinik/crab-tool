@@ -27,13 +27,18 @@ void SelectionRect::removeFromScene() {
     if (graphicsRect && graphicsRect->scene()) {
         graphicsRect->scene()->removeItem(graphicsRect);
     }
-    delete graphicsRect;
-    graphicsRect = nullptr;
+    if (graphicsRect) {
+        delete graphicsRect;
+        graphicsRect = nullptr;
+    }
     for (int i = 0; i < ellipses.size(); i++) {
         if (ellipses[i] && ellipses[i]->scene()) {
             ellipses[i]->scene()->removeItem(ellipses[i]);
         }
-        delete ellipses[i];
+        if (ellipses[i]) {
+            delete ellipses[i];
+            ellipses[i] = nullptr;
+        }
     }
 }
 
@@ -53,6 +58,24 @@ void SelectionRect::setRect(QRectF rect) {
         qreal circleStartY = corner.y() - (circleSizeScaled / 2);
         QRectF circleRect(circleStartX, circleStartY, circleSizeScaled, circleSizeScaled);
         ellipses[i]->setRect(circleRect);
+    }
+}
+
+void SelectionRect::activate() {
+    for (int i = 0; i < ellipses.size(); i++) {
+        if (ellipses[i] && ellipses[i]->scene()) {
+            ellipses[i]->setPen(circlePenActive);
+            ellipses[i]->setBrush(circleBrushActive);
+        }
+    }
+}
+
+void SelectionRect::deactivate() {
+    for (int i = 0; i < ellipses.size(); i++) {
+        if (ellipses[i] && ellipses[i]->scene()) {
+            ellipses[i]->setPen(circlePen);
+            ellipses[i]->setBrush(circleBrush);
+        }
     }
 }
 
@@ -83,7 +106,7 @@ QPointF *SelectionRect::getOppositePoint(QPointF point) {
             return &corners[i];
         }
     }
-    // In case rectangle is forms a line
+    // In case rectangle forms a line
     for (int i = 0; i < corners.size(); i++) {
         if (std::round(corners[i].x() * 10000) != std::round(point.x() * 10000) ||
             std::round(corners[i].y() * 10000) != std::round(point.y() * 10000)) {
