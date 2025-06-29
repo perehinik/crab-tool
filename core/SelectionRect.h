@@ -17,6 +17,7 @@ public:
     qreal getVisibleArea();
     void removeFromScene();
     ~SelectionRect();
+    QStringList tags;
 
 private:
     QGraphicsRectItem *graphicsRect = nullptr;

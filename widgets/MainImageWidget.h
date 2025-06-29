@@ -9,6 +9,7 @@
 #include <QScrollBar>
 
 #include "SelectionRect.h"
+#include "SelectionPopup.h"
 
 #define MAIN_IMG_MAX_ZOOM 20
 #define MAIN_IMG_MIN_ZOOM 1
@@ -39,22 +40,31 @@ protected:
 
 private:
     QString imagePath;
-    QGraphicsScene *scene;
-    QGraphicsPixmapItem *imageItem;
+    QGraphicsScene *scene = nullptr;
+    QGraphicsPixmapItem *imageItem = nullptr;
     double zoomLevel = 1.0;
     const double zoomStep = 1.15;
     bool resized = false;
     bool initialized = false;
+    SelectionPopup * selectionPopup = nullptr;
+    QGraphicsProxyWidget *selectionPopupProxy = nullptr;
 
     QList<SelectionRect*> rectangleList;
     SelectionRect *currentRect = nullptr;
     QPointF startPos;
+    QPointF latestPressPos;
     QPixmap pixmap;
 
     QPen rectanglePen = QPen(Qt::green, 20);
 
+    void selectionPopupDelete();
+    void createSelectionPopup();
+    bool forwardMouseEvent(QMouseEvent *event);
+    SelectionRect * getRectByPoint(QPointF point);
+
 signals:
     void onMousePosChanged(QPointF position);
+    void onSelectionChanged(SelectionRect * selection);
 };
 
 #endif // MAINIMAGEWIDGET_H

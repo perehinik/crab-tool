@@ -48,12 +48,15 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent)
     imageZoomDock->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     QObject::connect(imageWidget, &ImageWidget::onMousePosChanged, imageZoomWidget, &ImageZoomWidget::centerOn);
+
     parametersTableWidget = new ParametersTable(this);
     parametersTableWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     parametersTableDock = new QDockWidget("Parameters", this);
     parametersTableDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     parametersTableDock->setWidget(parametersTableWidget);
     parametersTableDock->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+
+    QObject::connect(imageWidget, &ImageWidget::onSelectionChanged, parametersTableWidget, &ParametersTable::setSelection);
 
     setMenuWidget(toolbox);
     setCentralWidget(imageWidget);

@@ -20,6 +20,8 @@ PointEditWidget::PointEditWidget(QWidget *parent) : QWidget(parent) {
     editY->setMaximumWidth(120);
     editX->setMinimumWidth(30);
     editY->setMinimumWidth(30);
+    editX->setMaximum(999999);
+    editY->setMaximum(999999);
     editX->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     editY->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 

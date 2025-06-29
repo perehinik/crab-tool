@@ -3,13 +3,13 @@
 
 #include <QWidget>
 #include <QStringList>
+#include <QListWidget>
 
-class QToolButton;
-class QLineEdit;
-class FlowLayout;
-class QFrame;
-class QListWidget;
-class QListWidgetItem;
+#include "FlowLayout.h"
+
+#define MULTI_VALUE_TAG_HEIGHT 22
+#define MULTI_VALUE_HOR_SPACE 4
+#define MULTI_VALUE_MIN_HEIGHT (2 * MULTI_VALUE_HOR_SPACE + MULTI_VALUE_TAG_HEIGHT)
 
 class MultiValueWidget : public QWidget {
     Q_OBJECT
@@ -17,6 +17,7 @@ public:
     explicit MultiValueWidget(QWidget *parent = nullptr);
 
     QStringList values() const;
+    void setValues(QStringList valList);
     void addValue(const QString &value);
     QSize sizeHint() const override;
     void clear();
@@ -36,6 +37,7 @@ private:
     QListWidget *valueList;
     QLineEdit *newEntry;
     QIcon deleteIcon;
+    QMap<QString, int> allValues;
 
     void createTag(const QString &text);
     void removeTag(QWidget *tagWidget);

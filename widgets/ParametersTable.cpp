@@ -4,8 +4,6 @@
 #include <QLayout>
 
 #include "ParametersTable.h"
-#include "PointEditWidget.h"
-#include "MultiValueWidget.h"
 
 ParametersTable::ParametersTable(QWidget *parent)
     : QTableWidget(0, 2, parent)
@@ -16,22 +14,40 @@ ParametersTable::ParametersTable(QWidget *parent)
     horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
 
-    int rowId;
-
-    rowId = addParameter("Object");
-    MultiValueWidget *objectsEdit = new MultiValueWidget(this);
+    int rowId = addParameter("Object");
+    objectsEdit = new MultiValueWidget(this);
     setCellWidget(rowId, 1, objectsEdit);
     connect(objectsEdit, &MultiValueWidget::valuesChanged, this, [=]() {
         setRowHeight(rowId, objectsEdit->sizeHint().height());
     });
 
     rowId = addParameter("Top Left");
-    PointEditWidget *edit = new PointEditWidget(this);
-    setCellWidget(rowId, 1, edit);
+    editTopLeft = new PointEditWidget(this);
+    setCellWidget(rowId, 1, editTopLeft);
 
     rowId = addParameter("Bot Right");
-    PointEditWidget *edit1 = new PointEditWidget(this);
-    setCellWidget(rowId, 1, edit1);
+    editBotRight = new PointEditWidget(this);
+    setCellWidget(rowId, 1, editBotRight);
+    setEnabled(false);
+}
+
+void ParametersTable::setSelection(SelectionRect * selection) {
+    if (currentSelection && !objectsEdit->values().isEmpty()) {
+        currentSelection->tags = objectsEdit->values();
+    }
+
+    clear();
+    currentSelection = selection;
+    if (!selection) {
+        setEnabled(false);
+        return;
+    }
+    setEnabled(true);
+    if (!selection->tags.isEmpty()) {
+        objectsEdit->setValues(selection->tags);
+    }
+    editTopLeft->setPoint(selection->getRect().topLeft().toPoint());
+    editBotRight->setPoint(selection->getRect().bottomRight().toPoint());
 }
 
 QTableWidgetItem * ParametersTable::createLabel(QString label) {
@@ -46,4 +62,10 @@ int ParametersTable::addParameter(QString label) {
     insertRow(rowId);
     setItem(rowId, 0, createLabel(label));
     return rowId;
+}
+
+void ParametersTable::clear() {
+    objectsEdit->clear();
+    editTopLeft->setPoint(QPoint(0,0));
+    editBotRight->setPoint(QPoint(0,0));
 }

@@ -101,6 +101,7 @@ QSize FlowLayout::minimumSize() const
     size.setHeight(y);
 
     size += QSize(left + right, top + bottom);
+    if (size.height() < 25) { size.setHeight(25); }
     return size;
 }
 
