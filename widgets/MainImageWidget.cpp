@@ -32,7 +32,7 @@ void ImageWidget::clear() {
     rectangleList.clear();
     selectionPopup = nullptr;
     selectionPopupProxy = nullptr;
-    currentRect = nullptr;
+    activateRect(nullptr);
     initialized = false;
 }
 
@@ -194,10 +194,12 @@ void ImageWidget::mousePressEvent(QMouseEvent *event) {
         activateRectByPoint(latestPressPos);
         if (!currentRect) {
             startPos = latestPressPos;
-            currentRect = new SelectionRect(scene, QRectF(startPos, startPos), (qreal)1.0 / transform().m11());
-            currentRect->setScale(1 / transform().m11());
+            SelectionRect * rect = new SelectionRect(scene, QRectF(startPos, startPos), (qreal)1.0 / transform().m11());
+            rect->setScale(1 / transform().m11());
+            rectangleList.append(rect);
+            activateRect(rect);
         }
-        emit onSelectionChanged(currentRect);
+        selectionResizeStarted = true;
     }
 
     if (!selectionPopup) {
@@ -231,7 +233,7 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event) {
     if (currentPos.x() > imageWidth) { currentPos.setX(imageWidth); }
     if (currentPos.y() > imageHeight) { currentPos.setY(imageHeight); }
 
-    if (currentRect) {
+    if (currentRect && selectionResizeStarted) {
         QRectF newRect(startPos, currentPos);
         currentRect->setRect(newRect.normalized());
         emit onSelectionChanged(currentRect);
@@ -245,17 +247,17 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
     if (!initialized || forwardMouseEvent(event)) {
         return;
     }
-    if (event->button() == Qt::LeftButton && currentRect) {
+    if (event->button() == Qt::LeftButton && currentRect && selectionResizeStarted) {
         // ToDo: Check if rect is too small to add
         if (!rectangleList.contains(currentRect) ) {
             rectangleList.append(currentRect);
         }
         if (currentRect->getVisibleArea() < 60) {
-            emit onSelectionChanged(nullptr);
             rectangleList.removeAll(currentRect);
             delete currentRect;
+            activateRect(nullptr);
         }
-        currentRect = nullptr;
+        selectionResizeStarted = false;
     }
     QGraphicsView::mouseReleaseEvent(event);
 }
@@ -286,20 +288,27 @@ SelectionRect * ImageWidget::getRectByPoint(QPointF point) {
 }
 
 void ImageWidget::activateRectByPoint(QPointF point) {
-    currentRect = getRectByPoint(point);
+    activateRect(getRectByPoint(point));
+}
+
+void ImageWidget::activateRect(SelectionRect * rect) {
+    if (currentRect && rectangleList.contains(currentRect)) {
+        currentRect->deactivate();
+    }
+    if (rectangleList.contains(rect)) {
+        currentRect = rect;
+        rect->activate();
+    } else {
+        currentRect = nullptr;
+    }
+    emit onSelectionChanged(rect);
 }
 
 void ImageWidget::selectionPopupDelete() {
     SelectionRect * activatedRect = getRectByPoint(latestPressPos);
-    if (activatedRect) {
-        emit onSelectionChanged(nullptr);
-        if (rectangleList.removeOne(activatedRect)) {
-            delete activatedRect;
-        }
-        if (currentRect == activatedRect) {
-            currentRect = nullptr;
-        }
-    }
+    rectangleList.removeAll(activatedRect);
+    delete activatedRect;
+    activateRect(nullptr);
     selectionPopupProxy->setVisible(false);
 }
 

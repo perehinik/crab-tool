@@ -40,16 +40,12 @@ ParametersTable::ParametersTable(QWidget *parent)
 }
 
 void ParametersTable::setSelection(SelectionRect * selection) {
-    if (currentSelection) {
-        currentSelection->deactivate();
-    }
     currentSelection = nullptr;
     clear();
     if (!selection) {
         setEnabled(false);
         return;
     }
-    selection->activate();
     setEnabled(true);
     if (!selection->tags.isEmpty()) {
         objectsEdit->setValues(selection->tags);

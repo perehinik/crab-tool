@@ -37,6 +37,7 @@ protected:
     void checkZoom();
     void updateRect();
     void activateRectByPoint(QPointF point);
+    void activateRect(SelectionRect * rect);
 
 private:
     QString imagePath;
@@ -46,6 +47,7 @@ private:
     const double zoomStep = 1.15;
     bool resized = false;
     bool initialized = false;
+    bool selectionResizeStarted = false;
     SelectionPopup * selectionPopup = nullptr;
     QGraphicsProxyWidget *selectionPopupProxy = nullptr;
 
