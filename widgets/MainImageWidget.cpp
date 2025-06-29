@@ -121,14 +121,14 @@ void ImageWidget::resizeEvent(QResizeEvent *event) {
 
 void ImageWidget::setZoom(double newZoomLevel) {
     fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
+    newZoomLevel = newZoomLevel > MAIN_IMG_MAX_ZOOM ? MAIN_IMG_MAX_ZOOM : newZoomLevel;
+    newZoomLevel = newZoomLevel < MAIN_IMG_MIN_ZOOM ? MAIN_IMG_MIN_ZOOM : newZoomLevel;
     zoomLevel = newZoomLevel;
     if (std::round(zoomLevel * 1000) == 1000) {
         this->resized = false;
         return;
     }
     this->resized = true;
-    newZoomLevel = newZoomLevel > MAIN_IMG_MAX_ZOOM ? MAIN_IMG_MAX_ZOOM : newZoomLevel;
-    newZoomLevel = newZoomLevel < MAIN_IMG_MIN_ZOOM ? MAIN_IMG_MIN_ZOOM : newZoomLevel;
     // P5ixel density divided by miniumum transformation
     qreal scaleMax = MAIN_IMG_MIN_PIX_DENSITY / transform().m11();
     // Calculate new scale using logarithmic interpolation

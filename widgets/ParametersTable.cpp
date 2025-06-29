@@ -17,30 +17,34 @@ ParametersTable::ParametersTable(QWidget *parent)
     int rowId = addParameter("Object");
     objectsEdit = new MultiValueWidget(this);
     setCellWidget(rowId, 1, objectsEdit);
-    connect(objectsEdit, &MultiValueWidget::valuesChanged, this, [=]() {
+    connect(objectsEdit, &MultiValueWidget::onValuesChanged, this, [=]() {
         setRowHeight(rowId, objectsEdit->sizeHint().height());
+        valuesUpdated();
     });
 
     rowId = addParameter("Top Left");
     editTopLeft = new PointEditWidget(this);
     setCellWidget(rowId, 1, editTopLeft);
+    connect(editTopLeft, &PointEditWidget::onPointChanged, this, [=](QPoint point) {
+        valuesUpdated();
+    });
 
     rowId = addParameter("Bot Right");
     editBotRight = new PointEditWidget(this);
     setCellWidget(rowId, 1, editBotRight);
+    connect(editBotRight, &PointEditWidget::onPointChanged, this, [=](QPoint point) {
+        valuesUpdated();
+    });
+
     setEnabled(false);
 }
 
 void ParametersTable::setSelection(SelectionRect * selection) {
-    if (currentSelection && !objectsEdit->values().isEmpty()) {
-        currentSelection->tags = objectsEdit->values();
-    }
     if (currentSelection) {
         currentSelection->deactivate();
     }
-
+    currentSelection = nullptr;
     clear();
-    currentSelection = selection;
     if (!selection) {
         setEnabled(false);
         return;
@@ -52,6 +56,7 @@ void ParametersTable::setSelection(SelectionRect * selection) {
     }
     editTopLeft->setPoint(selection->getRect().topLeft().toPoint());
     editBotRight->setPoint(selection->getRect().bottomRight().toPoint());
+    currentSelection = selection;
 }
 
 QTableWidgetItem * ParametersTable::createLabel(QString label) {
@@ -66,6 +71,14 @@ int ParametersTable::addParameter(QString label) {
     insertRow(rowId);
     setItem(rowId, 0, createLabel(label));
     return rowId;
+}
+
+void ParametersTable::valuesUpdated() {
+    if (!currentSelection) {
+        return;
+    }
+    currentSelection->tags = objectsEdit->values();
+    currentSelection->setRect(QRectF(editTopLeft->point(), editBotRight->point()));
 }
 
 void ParametersTable::clear() {

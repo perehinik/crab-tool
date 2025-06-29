@@ -24,6 +24,8 @@ PointEditWidget::PointEditWidget(QWidget *parent) : QWidget(parent) {
     editY->setMaximum(999999);
     editX->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     editY->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    connect(editX, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int val) { emit onPointChanged(this->point()); });
+    connect(editY, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int val) { emit onPointChanged(this->point()); });
 
     layout->addWidget(new QLabel("X:", this), 0, 0);
     layout->addWidget(editX, 0, 1);

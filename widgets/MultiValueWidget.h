@@ -23,7 +23,7 @@ public:
     void clear();
 
 signals:
-    void valuesChanged();
+    void onValuesChanged();
 
 private slots:
     void showPopup();

@@ -18,6 +18,7 @@ public:
     int addParameter(QString label);
     void setSelection(SelectionRect * selection);
     void clear();
+    void valuesUpdated();
 
     MultiValueWidget *objectsEdit;
     PointEditWidget *editTopLeft;

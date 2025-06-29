@@ -92,7 +92,7 @@ void MultiValueWidget::handleAddNew() {
         addValue(text);
         newEntry->clear();
         popup->hide();
-        emit valuesChanged();
+        emit onValuesChanged();
     }
 }
 
@@ -100,7 +100,7 @@ void MultiValueWidget::handleListItemClicked(QListWidgetItem *item) {
     if (item) {
         addValue(item->text());
         popup->hide();
-        emit valuesChanged();
+        emit onValuesChanged();
     }
 }
 
@@ -134,7 +134,7 @@ void MultiValueWidget::addValue(const QString &text) {
 
     connect(remove, &QPushButton::clicked, this, [=]() {
         removeTag(tag);
-        emit valuesChanged();
+        emit onValuesChanged();
     });
 }
 
@@ -172,7 +172,7 @@ void MultiValueWidget::clear() {
         QWidget *w = tagLayout->itemAt(0)->widget();
         removeTag(w);
     }
-    emit valuesChanged();
+    emit onValuesChanged();
 }
 
 void MultiValueWidget::mousePressEvent(QMouseEvent *event) {
