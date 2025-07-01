@@ -22,6 +22,7 @@ public:
     explicit ImageWidget(QWidget *parent = nullptr, const QString imagePath = nullptr);
 
     QString imagePath;
+    QString hash;
 
     void setImage(QString imagePath);
     void setZoom(double newZoomLevel);

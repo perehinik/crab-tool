@@ -1,6 +1,7 @@
 #include <QDockWidget>
 #include <QJsonObject>
 #include <QFileDialog>
+#include <qjsonarray.h>
 
 #include "MainWindow.h"
 #include "Constants.h"
@@ -92,19 +93,25 @@ void MainWindow::onSaveProjectClick() {
         }
         projectFilePath = fileName;
     }
-    qDebug() << "Save" << projectFilePath;
     saveProject(projectFilePath);
+}
+
+void MainWindow::updateProjectFile(QString projDir, QString projFile) {
+    projectDir = projDir;
+    projectFile = projFile;
+    toolbox->setCurrentDir(projectDir);
 }
 
 void MainWindow::saveProject(QString projectPath) {
     // Save latest changes to root object
-    if (!imageWidget->imagePath.isEmpty()) {
-        rootJson[imageWidget->imagePath] = imageWidget->toJson();
-    }
+    saveSelectionsToJson();
 
-    projectDir = QFileInfo(projectPath).absolutePath();
-    projectFile = QFileInfo(projectPath).fileName();
-    toolbox->setCurrentDir(projectDir);
+    QJsonObject obj = parametersTableWidget->objectsEdit->toJson();
+    rootJson["tags-frequency"] = obj["value-frequency"];
+    rootJson["project-version"] = PROJECT_VERSION;
+    rootJson["project-directory"] = projectDir;
+
+    updateProjectFile(QFileInfo(projectPath).absolutePath(), QFileInfo(projectPath).fileName());
     QFile file(projectPath);
     QJsonDocument doc(rootJson);
 
@@ -117,7 +124,6 @@ void MainWindow::saveProject(QString projectPath) {
 }
 
 void MainWindow::openProject(QString projectPath) {
-    qDebug() << "Open project" << projectPath;
     QFile file(projectPath);
 
     if (!file.open(QIODevice::ReadOnly)) {
@@ -142,11 +148,16 @@ void MainWindow::openProject(QString projectPath) {
     }
 
     rootJson = doc.object();
-    projectDir = QFileInfo(projectPath).absolutePath();
-    projectFile = QFileInfo(projectPath).fileName();
-    toolbox->setCurrentDir(projectDir);
+    updateProjectFile(QFileInfo(projectPath).absolutePath(), QFileInfo(projectPath).fileName());
+
     dirNavigatorWidget->setPath(projectDir);
     dirNavigatorDock->show();
+
+    QJsonObject obj;
+    if (rootJson.contains("tags-frequency")) {
+        obj["value-frequency"] = rootJson["tags-frequency"].toObject();
+        parametersTableWidget->objectsEdit->fromJson(obj);
+    }
 }
 
 void MainWindow::onDirOpen(QString dirPath) {
@@ -157,9 +168,7 @@ void MainWindow::onDirOpen(QString dirPath) {
     if (!QDir(dirPath).exists()) {
         return;
     }
-    projectDir = dirPath;
-    toolbox->setCurrentDir(projectDir);
-    projectFile = TEMP_PROJECT_FILENAME;
+    updateProjectFile(dirPath, TEMP_PROJECT_FILENAME);
     QString projectPath = QDir(projectDir).filePath(projectFile);
     if (!QFile(projectPath).exists()) {
         saveProject(projectPath);
@@ -189,8 +198,7 @@ void MainWindow::onFilesOpen(QStringList filePathList) {
     toolbox->setCurrentDir(newProjectDir);
     if (newProjectDir != projectDir) {
         rootJson = QJsonObject();
-        projectDir = newProjectDir;
-        projectFile = TEMP_PROJECT_FILENAME;
+        updateProjectFile(newProjectDir, TEMP_PROJECT_FILENAME);
         QString projectPath = QDir(projectDir).filePath(projectFile);
         if (!QFile(projectPath).exists()) {
             saveProject(projectPath);
@@ -206,13 +214,28 @@ void MainWindow::onPathChanged(QString dirPath) {
     imageNavigatorWidget->setPath(dirPath);
 }
 
-void MainWindow::onImageClicked(QString imagePath)
-{
-    rootJson[imageWidget->imagePath] = imageWidget->toJson();
+void MainWindow::onImageClicked(QString imagePath) {
+    if (!QFile(imagePath).exists()) {
+        return;
+    }
+    saveSelectionsToJson();
     imageWidget->setImage(imagePath);
     imageZoomWidget->setImage(imagePath);
-    if (rootJson.contains(imagePath)) {
-        imageWidget->fromJson(rootJson[imagePath].toObject());
+    if (rootJson.contains(imageWidget->hash)) {
+        imageWidget->fromJson(rootJson[imageWidget->hash].toObject());
+    }
+}
+
+void MainWindow::saveSelectionsToJson() {
+    if (imageWidget->selectionCount() == 0) {
+        rootJson.remove(imageWidget->hash);
+        return;
+    }
+    if (!imageWidget->hash.isEmpty()) {
+        QJsonObject obj = imageWidget->toJson();
+        QString relativePath = QDir(projectDir).relativeFilePath(imageWidget->imagePath);
+        obj["relative-path"] = relativePath;
+        rootJson[imageWidget->hash] = obj;
     }
 }
 

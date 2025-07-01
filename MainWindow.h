@@ -47,5 +47,7 @@ private:
     void saveProject(QString projectPath);
     void openProject(QString projectPath);
     void onSaveProjectClick();
+    void saveSelectionsToJson();
+    void updateProjectFile(QString projDir, QString projFile);
 };
 #endif // MAINWINDOW_H

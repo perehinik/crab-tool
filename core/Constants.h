@@ -3,6 +3,8 @@
 
 #include <QStringList>
 
+#define PROJECT_VERSION "1.0.0"
+
 #define PROJECT_EXTENSION "ctp"
 #define TEMP_PROJECT_FILENAME ".crab-tool-tmp." PROJECT_EXTENSION
 

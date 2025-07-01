@@ -7,8 +7,10 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFileInfo>
+#include <QMessageBox>
 
 #include "MainImageWidget.h"
+#include "Checksum.h"
 
 ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(parent) {
     setAttribute(Qt::WA_StyledBackground, true);
@@ -20,7 +22,9 @@ ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(par
     setRenderHint(QPainter::Antialiasing);
     setRenderHint(QPainter::SmoothPixmapTransform);
     setDragMode(QGraphicsView::NoDrag);
-    setImage(imagePath);
+    if (QFile(imagePath).exists()) {
+        setImage(imagePath);
+    }
 
     createSelectionPopup();
 
@@ -33,6 +37,7 @@ QJsonObject ImageWidget::toJson() {
     obj["type"] = "image-data";
     obj["image-path"] = imagePath;
     obj["image-filename"] = QFileInfo(imagePath).fileName();
+    obj["sha256"] = hash;
 
     QJsonArray rectArray;
     for (int i = 0; i < rectangleList.length(); ++i) {
@@ -48,7 +53,8 @@ void ImageWidget::fromJson(const QJsonObject &json) {
     if (json["type"].toString() != "image-data") {
         return;
     }
-    if (json["image-path"].toString() != imagePath) {
+    // Try to load image if checksum is not the same as in project/JSON
+    if (json["sha256"].toString() != hash) {
         setImage(json["image-path"].toString());
     }
     QJsonArray rectArray = json["selection-list"].toArray();
@@ -110,6 +116,15 @@ void ImageWidget::setImage(QString imagePath) {
     clear();
     createSelectionPopup();
     pixmap = QPixmap(imagePath);
+    if (pixmap.isNull()) {
+        QMessageBox::critical(this, "Error", "Image loading error!\nFile: " + imagePath);
+    }
+
+    hash = sha256(imagePath);
+    if (hash.isEmpty() && !pixmap.isNull()) {
+        QMessageBox::critical(this, "Error", "Image checksum calculation error!\nFile: " + imagePath);
+    }
+
     if (!pixmap.isNull()) {
         imageItem = scene->addPixmap(pixmap);
         // imageItem->setTransformationMode(Qt::SmoothTransformation);

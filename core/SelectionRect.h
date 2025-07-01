@@ -30,8 +30,6 @@ private:
     QList<QPointF> corners;
     QList<QGraphicsEllipseItem*> ellipses;
 
-    QPointF startPos;
-
     qreal lineWidth = 2;
     qreal circleSize = 8;
     qreal scale = 6;

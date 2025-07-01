@@ -2,6 +2,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QPoint>
+#include <QtMath>
 
 SelectionRect::SelectionRect(QGraphicsScene *scene, const QRectF rect, qreal scale) {
     this->scale = scale;
@@ -63,10 +64,10 @@ QJsonObject SelectionRect::toJson() {
     obj["type"] = "selection-corners-rect";
 
     QRectF r = getRect();
-    obj["x-top-left"] = r.topLeft().x();
-    obj["y-top-left"] = r.topLeft().y();
-    obj["x-bot-right"] = r.bottomRight().x();
-    obj["y-bot-right"] = r.bottomRight().y();
+    obj["x-top-left"] = qRound(r.topLeft().x());
+    obj["y-top-left"] = qRound(r.topLeft().y());
+    obj["x-bot-right"] = qRound(r.bottomRight().x());
+    obj["y-bot-right"] = qRound(r.bottomRight().y());
 
     QJsonArray tagArray;
     for (int i = 0; i < tags.length(); i++) {

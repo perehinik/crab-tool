@@ -21,6 +21,8 @@ public:
     void addValue(const QString &value);
     QSize sizeHint() const override;
     void clear();
+    QJsonObject toJson();
+    void fromJson(QJsonObject &json);
 
 signals:
     void onValuesChanged();

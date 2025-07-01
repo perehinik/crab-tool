@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QListWidgetItem>
 #include <QApplication>
+#include <qjsonobject.h>
 
 MultiValueWidget::MultiValueWidget(QWidget *parent)
     : QWidget(parent)
@@ -47,6 +48,27 @@ MultiValueWidget::MultiValueWidget(QWidget *parent)
 
     connect(newEntry, &QLineEdit::returnPressed, this, &MultiValueWidget::handleAddNew);
     connect(valueList, &QListWidget::itemClicked, this, &MultiValueWidget::handleListItemClicked);
+}
+
+QJsonObject MultiValueWidget::toJson() {
+    QJsonObject obj;
+
+    QJsonObject valueFrequency;
+    for (auto it = allValues.begin(); it != allValues.end(); ++it) {
+        valueFrequency[it.key()] = it.value();
+    }
+    obj["value-frequency"] = valueFrequency;
+    return obj;
+}
+
+void MultiValueWidget::fromJson(QJsonObject &json) {
+    allValues.clear();
+    if (json.contains("value-frequency")) {
+        QJsonObject valueFrequency = json["value-frequency"].toObject();
+        for (auto it = valueFrequency.begin(); it != valueFrequency.end(); ++it) {
+            allValues[it.key()] = it.value().toInt();
+        }
+    }
 }
 
 QSize MultiValueWidget::sizeHint() const {
@@ -143,7 +165,9 @@ void MultiValueWidget::removeTag(QWidget *tagWidget) {
     if (!allValues.contains(tagText)) {
         allValues[tagText] = 0;
     }
-    allValues[tagText] -= 1;
+    if (allValues[tagText] > 0) {
+        allValues[tagText] -= 1;
+    }
 
     tagLayout->removeWidget(tagWidget);
     tagWidget->deleteLater();
@@ -170,7 +194,8 @@ void MultiValueWidget::setValues(QStringList valList) {
 void MultiValueWidget::clear() {
     while (tagLayout->count()) {
         QWidget *w = tagLayout->itemAt(0)->widget();
-        removeTag(w);
+        tagLayout->removeWidget(w);
+        w->deleteLater();
     }
     emit onValuesChanged();
 }
