@@ -1,3 +1,5 @@
+#include <QThread>
+
 #include "DirNavigatorWidget.h"
 
 DirNavigatorWidget::DirNavigatorWidget(QWidget *parent) : QWidget(parent) {
@@ -29,21 +31,23 @@ void DirNavigatorWidget::onPathChanged(const QModelIndex &index) {
 }
 
 void DirNavigatorWidget::setPath(QString dirPath) {
-    if (initialized) {
-        requestedPath = dirPath;
-        model = new QFileSystemModel(this);
-        model->setRootPath(dirPath);
+    // while (!initialized) {
+    //     QThread::msleep(100);
+    // }
+    requestedPath = dirPath;
+    model = new QFileSystemModel(this);
+    model->setRootPath(dirPath);
 
-        proxy = new ImageDirOnlyProxy(this);
-        proxy->setSourceModel(model);
+    proxy = new ImageDirOnlyProxy(this);
+    proxy->setSourceModel(model);
 
-        view->setModel(proxy);
-        view->setRootIndex(proxy->mapFromSource(model->index(dirPath)));
-        view->setHeaderHidden(true);  // Optional: hide file size/date columns
-        view->setColumnHidden(1, true); // Size
-        view->setColumnHidden(2, true); // File type
-        view->setColumnHidden(3, true); // Date modified
-    }
+    view->setModel(proxy);
+    view->setRootIndex(proxy->mapFromSource(model->index(dirPath)));
+    view->setHeaderHidden(true);  // Optional: hide file size/date columns
+    view->setColumnHidden(1, true); // Size
+    view->setColumnHidden(2, true); // File type
+    view->setColumnHidden(3, true); // Date modified
+    initialized = true;
 }
 
 void DirNavigatorWidget::showEvent(QShowEvent *event) {
@@ -51,6 +55,5 @@ void DirNavigatorWidget::showEvent(QShowEvent *event) {
 
     if (!initialized) {
         initialized = true;
-        setPath("/home/ivan/proj/TrainingData/");
     }
 }

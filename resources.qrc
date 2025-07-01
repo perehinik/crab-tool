@@ -3,7 +3,6 @@
         <file>icon/image-wide.png</file>
         <file>icon/image-broken-wide.png</file>
         <file>icon/folder-fill.png</file>
-        <file>icon/file-add-fill.png</file>
         <file>icon/drag.png</file>
         <file>icon/zoom-to-extents.png</file>
         <file>icon/zoom-out.png</file>
@@ -12,5 +11,7 @@
         <file>icon/landscape.png</file>
         <file>icon/picture.png</file>
         <file>icon/delete.png</file>
+        <file>icon/project-file.png</file>
+        <file>icon/images.png</file>
     </qresource>
 </RCC>

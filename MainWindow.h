@@ -6,6 +6,7 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QJsonObject>
+#include <Constants.h>
 
 #include "DirNavigatorWidget.h"
 #include "ImageNavigatorWidget.h"
@@ -25,6 +26,8 @@ public:
     ~MainWindow();
 
 private:
+    QString projectDir;
+    QString projectFile;
     QJsonObject rootJson;
     ToolboxWidget *toolbox;
     DirNavigatorWidget *dirNavigatorWidget;
@@ -41,5 +44,8 @@ private:
     void onDirOpen(QString dirPath);
     void onFilesOpen(QStringList filePathList);
     void onMoveChanged();
+    void saveProject(QString projectPath);
+    void openProject(QString projectPath);
+    void onSaveProjectClick();
 };
 #endif // MAINWINDOW_H

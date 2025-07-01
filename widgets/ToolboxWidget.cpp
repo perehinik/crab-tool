@@ -11,6 +11,7 @@
 #define TOOLBOX_BUTTON_HEIGHT 30
 
 ToolboxWidget::ToolboxWidget(QWidget *parent) : QWidget(parent) {
+    currentDir = QDir::homePath();
     setAttribute(Qt::WA_StyledBackground, true);
     setStyleSheet("border: 1px solid lightgrey;");
     setFixedHeight(TOOLBOX_BUTTON_HEIGHT);
@@ -20,8 +21,11 @@ ToolboxWidget::ToolboxWidget(QWidget *parent) : QWidget(parent) {
     layout->setAlignment(Qt::AlignLeft);
     layout->setSpacing(0);
 
-    ToolboxButton *openFileButton = new ToolboxButton(QIcon(":/icon/file-add-fill.png"), "Open File", 32, 24, this);
-    connect(openFileButton->action, &QAction::triggered, this, &ToolboxWidget::onOpenFile);
+    ToolboxButton *openProjectButton = new ToolboxButton(QIcon(":/icon/project-file.png"), "Open File", 32, 20, this);
+    connect(openProjectButton->action, &QAction::triggered, this, &ToolboxWidget::onOpenProject);
+
+    ToolboxButton *openImagesButton = new ToolboxButton(QIcon(":/icon/images.png"), "Open File", 32, 24, this);
+    connect(openImagesButton->action, &QAction::triggered, this, &ToolboxWidget::onOpenImages);
 
     ToolboxButton *openDirButton = new ToolboxButton(QIcon(":/icon/folder-fill.png"), "Open Directory", 32, 24, this);
     connect(openDirButton->action, &QAction::triggered, this, &ToolboxWidget::onOpenDir);
@@ -35,27 +39,48 @@ ToolboxWidget::ToolboxWidget(QWidget *parent) : QWidget(parent) {
     zoomOutToolButton = new ToolboxButton(QIcon(":/icon/zoom-out.png"), "Zoom Out", 32, 24, this);
     zoomToExtentsToolButton = new ToolboxButton(QIcon(":/icon/zoom-to-extents.png"), "Zoom To Extents", 32, 24, this);
 
-    layout->addWidget(openFileButton, 0, 0);
-    layout->addWidget(openDirButton, 0, 1);
-    layout->addWidget(saveButton, 0, 2);
-    layout->addWidget(handToolButton, 0, 3);
-    layout->addWidget(zoomInToolButton, 0, 4);
-    layout->addWidget(zoomOutToolButton, 0, 5);
-    layout->addWidget(zoomToExtentsToolButton, 0, 6);
+    layout->addWidget(openProjectButton, 0, 0);
+    layout->addWidget(openImagesButton, 0, 1);
+    layout->addWidget(openDirButton, 0, 2);
+    layout->addWidget(saveButton, 0, 3);
+    layout->addWidget(handToolButton, 0, 4);
+    layout->addWidget(zoomInToolButton, 0, 5);
+    layout->addWidget(zoomOutToolButton, 0, 6);
+    layout->addWidget(zoomToExtentsToolButton, 0, 7);
 }
 
-void ToolboxWidget::onOpenFile() {
+void ToolboxWidget::setCurrentDir(QString dirPath) {
+    if (QDir(dirPath).exists()) {
+        currentDir = QDir(dirPath);
+    }
+}
+
+void ToolboxWidget::onOpenImages() {
     QStringList fileNames = QFileDialog::getOpenFileNames(
         this,
-        "Select Files",
-        QDir::homePath(),
+        "Select Image Files",
+        currentDir.exists() ? currentDir.path() : QDir::homePath(),
         "Images (*.png *.jpg *.bmp);;All Files (*.*)"
     );
 
     if (fileNames.isEmpty()) {
         return;
     }
-    emit onFilesOpen(fileNames);
+    emit onImagesOpen(fileNames);
+}
+
+void ToolboxWidget::onOpenProject() {
+    QString fileName = QFileDialog::getOpenFileName(
+        this,
+        "Select Project File",
+        currentDir.exists() ? currentDir.path() : QDir::homePath(),
+        "Project (*.ctp)"
+        );
+
+    if (fileName.isEmpty()) {
+        return;
+    }
+    emit onProjectOpen(fileName);
 }
 
 void ToolboxWidget::onOpenDir() {

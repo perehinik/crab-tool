@@ -3,6 +3,9 @@
 
 #include <QStringList>
 
+#define PROJECT_EXTENSION "ctp"
+#define TEMP_PROJECT_FILENAME ".crab-tool-tmp." PROJECT_EXTENSION
+
 inline const QStringList IMAGE_EXTENSIONS = {
     "jpg", "jpeg", "png", "bmp", "gif", "webp"
 };
