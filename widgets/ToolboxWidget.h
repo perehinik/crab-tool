@@ -6,29 +6,30 @@
 
 #include "ToolboxButtonWidget.h"
 
+class QMenuBar;
+
 class ToolboxWidget : public QWidget {
     Q_OBJECT
 
 public:
     explicit ToolboxWidget(QWidget *parent = nullptr);
+    QMenuBar *menuBar;
+
     void onOpenProject();
     void onOpenImages();
     void onOpenDir();
-    void setCurrentDir(QString dirPath);
 
     ToolboxButton *saveButton;
+    ToolboxButton *openProjectButton;
+    ToolboxButton *createProjectButton;
+    ToolboxButton *openImagesButton;
+    ToolboxButton *openDirButton;
     ToolboxButton *handToolButton;
     ToolboxButton *zoomInToolButton;
     ToolboxButton *zoomOutToolButton;
     ToolboxButton *zoomToExtentsToolButton;
 
-private:
-    QDir currentDir;
-
-signals:
-    void onDirOpen(QString dirPath);
-    void onProjectOpen(QString filePath);
-    void onImagesOpen(QStringList filePathList);
+    void showInfoPopup();
 };
 
 #endif // TOOLBOXWIDGET_H

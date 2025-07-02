@@ -28,7 +28,9 @@ public:
 private:
     QString projectDir;
     QString projectFile;
+    bool projectUpdated;
     QJsonObject rootJson;
+    QJsonObject imagesJson;
     ToolboxWidget *toolbox;
     DirNavigatorWidget *dirNavigatorWidget;
     ImageNavigatorWidget *imageNavigatorWidget;
@@ -47,6 +49,10 @@ private:
     void saveProject(QString projectPath);
     void openProject(QString projectPath);
     void onSaveProjectClick();
+    void onOpenProjectClick();
+    void onCreateProjectClick();
+    void onOpenDirClick();
+    void onOpenImagesClick();
     void saveSelectionsToJson();
     void updateProjectFile(QString projDir, QString projFile);
 };

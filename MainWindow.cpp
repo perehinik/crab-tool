@@ -1,19 +1,23 @@
 #include <QDockWidget>
 #include <QJsonObject>
-#include <QFileDialog>
-#include <qjsonarray.h>
+#include <QJsonArray>
+#include <QMessageBox>
 
 #include "MainWindow.h"
 #include "Constants.h"
+#include "FileDialog.h"
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent) {
     rootJson = QJsonObject();
+    imagesJson = QJsonObject();
+    projectUpdated = false;
     toolbox = new ToolboxWidget(this);
     connect(toolbox->handToolButton, &QToolButton::toggled, this, &MainWindow::onMoveChanged);
 
-    connect(toolbox, &ToolboxWidget::onDirOpen, this, &MainWindow::onDirOpen);
-    connect(toolbox, &ToolboxWidget::onImagesOpen, this, &MainWindow::onFilesOpen);
-    connect(toolbox, &ToolboxWidget::onProjectOpen, this, &MainWindow::openProject);
+    connect(toolbox->openDirButton->action, &QAction::triggered, this, &MainWindow::onOpenDirClick);
+    connect(toolbox->openImagesButton->action, &QAction::triggered, this, &MainWindow::onOpenImagesClick);
+    connect(toolbox->openProjectButton->action, &QAction::triggered, this, &MainWindow::onOpenProjectClick);
+    connect(toolbox->createProjectButton->action, &QAction::triggered, this, &MainWindow::onCreateProjectClick);
     connect(toolbox->saveButton->action, &QAction::triggered, this, &MainWindow::onSaveProjectClick);
 
     imageWidget = new ImageWidget(this);
@@ -71,35 +75,93 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent) {
     addDockWidget(Qt::RightDockWidgetArea, imageZoomDock);
     addDockWidget(Qt::RightDockWidgetArea, parametersTableDock);
 
+    projectFile = TEMP_PROJECT_FILENAME;
     onDirOpen("/home/ivan/proj/TrainingData/");
 }
 
 void MainWindow::onSaveProjectClick() {
     QString projectFilePath = QDir(projectDir).filePath(projectFile);
     if (projectFile == TEMP_PROJECT_FILENAME) {
-        QString fileName = QFileDialog::getSaveFileName(
-            this,
-            "Save Project File",
-            projectDir,
-            "Project (*.ctp)"
-            );
-
+        QString fileName = saveProjectDialog(this, projectDir);
         if (fileName.isEmpty()) {
             return;
-        }
-        if (!fileName.endsWith(PROJECT_EXTENSION)) {
-            fileName+=".";
-            fileName+=PROJECT_EXTENSION;
         }
         projectFilePath = fileName;
     }
     saveProject(projectFilePath);
 }
 
+void MainWindow::onCreateProjectClick() {
+    saveSelectionsToJson();
+    if (projectUpdated) {
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this,
+            "Confirm",
+            "You're trying to create new project\n"
+            "But you have unsaved changes, would you like to save them?",
+            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel
+            );
+        if (reply == QMessageBox::Yes) {
+            onSaveProjectClick();
+            rootJson = QJsonObject();
+            imagesJson = QJsonObject();
+            projectUpdated = false;
+        } else if (reply == QMessageBox::No) {
+            rootJson = QJsonObject();
+            imagesJson = QJsonObject();
+            projectUpdated = false;
+        } else if (reply == QMessageBox::Cancel) {
+            return;
+        }
+    }
+
+    QString newProjectPath = openProjectDialog(this, projectDir);
+    if (newProjectPath.isEmpty()) {
+        return;
+    }
+    QFile file(newProjectPath);
+    if (!file.exists()) {
+        // User wants to create completely new project
+        updateProjectFile(QFileInfo(newProjectPath).absolutePath(), QFileInfo(newProjectPath).fileName());
+        // No need to save for now. User will need to save later.
+        return;
+    }
+}
+
+void MainWindow::onOpenProjectClick() {
+    saveSelectionsToJson();
+    if (projectUpdated) {
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this,
+            "Confirm",
+            "You're trying to open another project\n"
+            "But you have unsaved changes, would you like to save them?",
+            QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel
+            );
+        if (reply == QMessageBox::Yes) {
+            onSaveProjectClick();
+            rootJson = QJsonObject();
+            imagesJson = QJsonObject();
+            projectUpdated = false;
+        } else if (reply == QMessageBox::No) {
+            rootJson = QJsonObject();
+            imagesJson = QJsonObject();
+            projectUpdated = false;
+        } else if (reply == QMessageBox::Cancel) {
+            return;
+        }
+    }
+
+    QString newProjectPath = openProjectDialog(this, projectDir);
+    if (newProjectPath.isEmpty()) {
+        return;
+    }
+    openProject(newProjectPath);
+}
+
 void MainWindow::updateProjectFile(QString projDir, QString projFile) {
     projectDir = projDir;
     projectFile = projFile;
-    toolbox->setCurrentDir(projectDir);
 }
 
 void MainWindow::saveProject(QString projectPath) {
@@ -110,6 +172,7 @@ void MainWindow::saveProject(QString projectPath) {
     rootJson["tags-frequency"] = obj["value-frequency"];
     rootJson["project-version"] = PROJECT_VERSION;
     rootJson["project-directory"] = projectDir;
+    rootJson["images"] = imagesJson;
 
     updateProjectFile(QFileInfo(projectPath).absolutePath(), QFileInfo(projectPath).fileName());
     QFile file(projectPath);
@@ -117,15 +180,18 @@ void MainWindow::saveProject(QString projectPath) {
 
     if (file.open(QIODevice::WriteOnly)) {
         file.write(doc.toJson(QJsonDocument::Indented)); // or Compact
+        projectUpdated = false;
         file.close();
     } else {
         qWarning() << "Could not open file for writing:" << file.errorString();
     }
 }
 
-void MainWindow::openProject(QString projectPath) {
-    QFile file(projectPath);
-
+void MainWindow::openProject(QString newProjectPath) {
+    rootJson = QJsonObject();
+    imagesJson = QJsonObject();
+    projectUpdated = false;
+    QFile file(newProjectPath);
     if (!file.open(QIODevice::ReadOnly)) {
         qWarning() << "Couldn't open file:" << file.errorString();
         return;
@@ -148,43 +214,61 @@ void MainWindow::openProject(QString projectPath) {
     }
 
     rootJson = doc.object();
-    updateProjectFile(QFileInfo(projectPath).absolutePath(), QFileInfo(projectPath).fileName());
+    updateProjectFile(QFileInfo(newProjectPath).absolutePath(), QFileInfo(newProjectPath).fileName());
 
     dirNavigatorWidget->setPath(projectDir);
     dirNavigatorDock->show();
+    imageWidget->clear();
 
     QJsonObject obj;
     if (rootJson.contains("tags-frequency")) {
         obj["value-frequency"] = rootJson["tags-frequency"].toObject();
         parametersTableWidget->objectsEdit->fromJson(obj);
     }
+    if (rootJson.contains("images")) {
+        imagesJson = rootJson["images"].toObject();
+    }
+}
+
+void MainWindow::onOpenDirClick() {
+    QString dirPath = openDirDialog(this, projectDir);
+    if (dirPath.isEmpty() || !QDir(dirPath).exists()) {
+        return;
+    }
+    onDirOpen(dirPath);
 }
 
 void MainWindow::onDirOpen(QString dirPath) {
     if (QDir(projectDir).exists() && !projectFile.isEmpty()) {
         saveProject(QDir(projectDir).filePath(projectFile));
         rootJson = QJsonObject();
+        imagesJson = QJsonObject();
+        projectUpdated = false;
     }
-    if (!QDir(dirPath).exists()) {
-        return;
-    }
-    updateProjectFile(dirPath, TEMP_PROJECT_FILENAME);
-    QString projectPath = QDir(projectDir).filePath(projectFile);
-    if (!QFile(projectPath).exists()) {
-        saveProject(projectPath);
-    } else {
-        openProject(projectPath);
+    if (dirPath != projectDir && projectFile == TEMP_PROJECT_FILENAME) {
+        rootJson = QJsonObject();
+        imagesJson = QJsonObject();
+        projectUpdated = false;
+        updateProjectFile(dirPath, TEMP_PROJECT_FILENAME);
+        QString projectPath = QDir(projectDir).filePath(projectFile);
+        if (!QFile(projectPath).exists()) {
+            saveProject(projectPath);
+        } else {
+            openProject(projectPath);
+        }
     }
     dirNavigatorWidget->setPath(dirPath);
+    imageNavigatorWidget->setPath(dirPath);
+    imageWidget->clear();
     dirNavigatorDock->show();
 }
 
-void MainWindow::onMoveChanged() {
-    if (toolbox->handToolButton->isChecked()) {
-        imageWidget->setDragMode(QGraphicsView::ScrollHandDrag);
-    } else {
-        imageWidget->setDragMode(QGraphicsView::NoDrag);
+void MainWindow::onOpenImagesClick() {
+    QStringList filePathList = openImagesDialog(this, projectDir);
+    if (filePathList.isEmpty()) {
+        return;
     }
+    onFilesOpen(filePathList);
 }
 
 void MainWindow::onFilesOpen(QStringList filePathList) {
@@ -193,11 +277,15 @@ void MainWindow::onFilesOpen(QStringList filePathList) {
     }
     if (QDir(projectDir).exists() && !projectFile.isEmpty()) {
         saveProject(QDir(projectDir).filePath(projectFile));
+        rootJson = QJsonObject();
+        imagesJson = QJsonObject();
+        projectUpdated = false;
     }
     QString newProjectDir = QFileInfo(filePathList[0]).absolutePath();
-    toolbox->setCurrentDir(newProjectDir);
-    if (newProjectDir != projectDir) {
+    if (newProjectDir != projectDir && projectFile == TEMP_PROJECT_FILENAME) {
         rootJson = QJsonObject();
+        imagesJson = QJsonObject();
+        projectUpdated = false;
         updateProjectFile(newProjectDir, TEMP_PROJECT_FILENAME);
         QString projectPath = QDir(projectDir).filePath(projectFile);
         if (!QFile(projectPath).exists()) {
@@ -207,7 +295,16 @@ void MainWindow::onFilesOpen(QStringList filePathList) {
         }
     }
     imageNavigatorWidget->loadItems(filePathList);
+    imageWidget->clear();
     dirNavigatorDock->hide();
+}
+
+void MainWindow::onMoveChanged() {
+    if (toolbox->handToolButton->isChecked()) {
+        imageWidget->setDragMode(QGraphicsView::ScrollHandDrag);
+    } else {
+        imageWidget->setDragMode(QGraphicsView::NoDrag);
+    }
 }
 
 void MainWindow::onPathChanged(QString dirPath) {
@@ -221,21 +318,25 @@ void MainWindow::onImageClicked(QString imagePath) {
     saveSelectionsToJson();
     imageWidget->setImage(imagePath);
     imageZoomWidget->setImage(imagePath);
-    if (rootJson.contains(imageWidget->hash)) {
-        imageWidget->fromJson(rootJson[imageWidget->hash].toObject());
+    if (imagesJson.contains(imageWidget->hash)) {
+        imageWidget->fromJson(imagesJson[imageWidget->hash].toObject());
     }
 }
 
 void MainWindow::saveSelectionsToJson() {
-    if (imageWidget->selectionCount() == 0) {
-        rootJson.remove(imageWidget->hash);
+    if (imageWidget->selectionCount() == 0 && imagesJson.contains(imageWidget->hash)) {
+        imagesJson.remove(imageWidget->hash);
+        projectUpdated = true;
         return;
     }
     if (!imageWidget->hash.isEmpty()) {
         QJsonObject obj = imageWidget->toJson();
+        if (obj != imagesJson[imageWidget->hash].toObject()) {
+            projectUpdated = true;
+        }
         QString relativePath = QDir(projectDir).relativeFilePath(imageWidget->imagePath);
         obj["relative-path"] = relativePath;
-        rootJson[imageWidget->hash] = obj;
+        imagesJson[imageWidget->hash] = obj;
     }
 }
 

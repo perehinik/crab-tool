@@ -170,6 +170,9 @@ void ImageWidget::resizeEvent(QResizeEvent *event) {
 }
 
 void ImageWidget::setZoom(double newZoomLevel) {
+    if (!pixmap || pixmap.isNull()) {
+        return;
+    }
     fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
     newZoomLevel = newZoomLevel > MAIN_IMG_MAX_ZOOM ? MAIN_IMG_MAX_ZOOM : newZoomLevel;
     newZoomLevel = newZoomLevel < MAIN_IMG_MIN_ZOOM ? MAIN_IMG_MIN_ZOOM : newZoomLevel;

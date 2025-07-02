@@ -13,5 +13,10 @@
         <file>icon/delete.png</file>
         <file>icon/project-file.png</file>
         <file>icon/images.png</file>
+        <file>icon/info.png</file>
+        <file>icon/export.png</file>
+        <file>icon/crab-small.png</file>
+        <file>icon/crab-big.png</file>
+        <file>icon/project-file-open.png</file>
     </qresource>
 </RCC>
