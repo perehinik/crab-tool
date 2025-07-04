@@ -17,6 +17,7 @@ public:
     explicit MultiValueWidget(QWidget *parent = nullptr);
 
     QStringList values() const;
+    QMap<QString, int> allValues;
     void setValues(QStringList valList);
     void addValue(const QString &value);
     QSize sizeHint() const override;
@@ -39,7 +40,6 @@ private:
     QListWidget *valueList;
     QLineEdit *newEntry;
     QIcon deleteIcon;
-    QMap<QString, int> allValues;
 
     void createTag(const QString &text);
     void removeTag(QWidget *tagWidget);

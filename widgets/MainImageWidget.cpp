@@ -31,6 +31,10 @@ ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(par
     setMouseTracking(true);
 }
 
+bool ImageWidget::isInitialized() {
+    return initialized;
+}
+
 QJsonObject ImageWidget::toJson() {
     QJsonObject obj;
 

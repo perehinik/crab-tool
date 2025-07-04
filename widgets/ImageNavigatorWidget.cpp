@@ -147,3 +147,14 @@ void ImageNavigatorWidget::updateView() {
     view->doItemsLayout();  // forces layout update
     view->updateGeometry();
 }
+
+void ImageNavigatorWidget::clear() {
+    if (!view || !view->model()) {
+        return;
+    }
+    filePathList.clear();
+    fileNameList.clear();
+    pixmapList.clear();
+    model->updateData(fileNameList, pixmapList);
+    view->viewport()->update();
+}

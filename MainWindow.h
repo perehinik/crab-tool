@@ -14,6 +14,7 @@
 #include "ImageZoomWidget.h"
 #include "ToolboxWidget.h"
 #include "ParametersTable.h"
+#include "ProjectData.h"
 
 class MainWindow : public QMainWindow
 {
@@ -26,11 +27,8 @@ public:
     ~MainWindow();
 
 private:
-    QString projectDir;
-    QString projectFile;
+    ProjectData *projectData;
     bool projectUpdated;
-    QJsonObject rootJson;
-    QJsonObject imagesJson;
     ToolboxWidget *toolbox;
     DirNavigatorWidget *dirNavigatorWidget;
     ImageNavigatorWidget *imageNavigatorWidget;
@@ -45,15 +43,15 @@ private:
     void showEvent(QShowEvent *event) override;
     void onDirOpen(QString dirPath);
     void onFilesOpen(QStringList filePathList);
-    void onMoveChanged();
+    void onMouseToolChanged();
     void saveProject(QString projectPath);
     void openProject(QString projectPath);
-    void onSaveProjectClick();
-    void onOpenProjectClick();
-    void onCreateProjectClick();
-    void onOpenDirClick();
-    void onOpenImagesClick();
-    void saveSelectionsToJson();
+    void saveProjectClickHandler();
+    void openProjectClickHandler();
+    void createProjectClickHandler();
+    void openDirClickHandler();
+    void openImagesClickHandler();
+    void saveSelectionsToProject();
     void updateProjectFile(QString projDir, QString projFile);
 };
 #endif // MAINWINDOW_H

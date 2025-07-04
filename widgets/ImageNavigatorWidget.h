@@ -30,6 +30,7 @@ public:
     void setPath(QString dirPath);
     void updateItem(int index, const QString filePath, const QPixmap &pixmap);
     void updateView();
+    void clear();
 
 signals:
     void onImageClicked(QString imagePath);

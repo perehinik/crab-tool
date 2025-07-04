@@ -33,6 +33,7 @@ public:
     QJsonObject toJson();
     void fromJson(const QJsonObject &json);
     int selectionCount();
+    bool isInitialized();
     ~ImageWidget();
 
 protected:
