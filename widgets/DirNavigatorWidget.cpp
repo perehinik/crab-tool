@@ -34,6 +34,7 @@ void DirNavigatorWidget::setPath(QString dirPath) {
     // while (!initialized) {
     //     QThread::msleep(100);
     // }
+    this->dirPath = dirPath;
     requestedPath = dirPath;
     model = new QFileSystemModel(this);
     model->setRootPath(dirPath);

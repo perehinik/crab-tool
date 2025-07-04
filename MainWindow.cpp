@@ -89,12 +89,9 @@ void MainWindow::createProjectClickHandler() {
     if (projectData->createWithDialog() == 0) {
         dirNavigatorWidget->setPath(projectData->projectDir());
         imageNavigatorWidget->setPath(projectData->projectDir());
-    } else {
-        dirNavigatorWidget->setPath("");
-        imageNavigatorWidget->clear();
+        dirNavigatorDock->show();
+        imageWidget->clear();
     }
-    dirNavigatorDock->show();
-    imageWidget->clear();
 }
 
 void MainWindow::openProjectClickHandler() {
@@ -102,12 +99,10 @@ void MainWindow::openProjectClickHandler() {
     if (projectData->openWithDialog() == 0) {
         dirNavigatorWidget->setPath(projectData->projectDir());
         imageNavigatorWidget->setPath(projectData->projectDir());
-    } else {
-        dirNavigatorWidget->setPath("");
-        imageNavigatorWidget->clear();
+        dirNavigatorDock->show();
+        imageWidget->clear();
     }
-    dirNavigatorDock->show();
-    imageWidget->clear();
+
     // Update this at some point, allValues should be private and have different name.
     parametersTableWidget->objectsEdit->allValues = projectData->allTagsCount();
 }
@@ -117,21 +112,20 @@ void MainWindow::openDirClickHandler() {
     if (projectData->openDirWithDialog() == 0) {
         dirNavigatorWidget->setPath(projectData->projectDir());
         imageNavigatorWidget->setPath(projectData->projectDir());
-    } else {
-        dirNavigatorWidget->setPath("");
-        imageNavigatorWidget->clear();
+        dirNavigatorDock->show();
+        imageWidget->clear();
     }
-    dirNavigatorDock->show();
-    imageWidget->clear();
 }
 
 void MainWindow::openImagesClickHandler() {
     saveSelectionsToProject();
     QStringList fileList = projectData->openImagesWithDialog();
 
-    imageNavigatorWidget->loadItems(fileList);
-    imageWidget->clear();
-    dirNavigatorDock->hide();
+    if (!fileList.isEmpty()) {
+        imageNavigatorWidget->loadItems(fileList);
+        imageWidget->clear();
+        dirNavigatorDock->hide();
+    }
 }
 
 void MainWindow::onMouseToolChanged() {

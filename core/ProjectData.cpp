@@ -74,13 +74,13 @@ QJsonObject ProjectData::allTagsCountJson() {
 
 // Clean project before next action
 // If there are unsaved changes -> ask user what to do.
-int ProjectData::clean(QString action) {
+int ProjectData::clearQuery(QString action) {
     if (projectUpdated) {
         QMessageBox::StandardButton reply = QMessageBox::question(
             nullptr,
             "Confirm",
-            "You're trying to open another project\n"
-            "But you have unsaved changes, would you like to save them?",
+            action + "\n"
+            "You have unsaved changes, would you like to save them?",
             QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel
             );
         if (reply == QMessageBox::Yes) {
@@ -88,23 +88,19 @@ int ProjectData::clean(QString action) {
                 // Something went wrong during saving. Do not remove data.
                 return -1;
             }
-            imagesJson = QJsonObject();
-            projectUpdated = false;
         } else if (reply == QMessageBox::No) {
-            // The user chose not to save the changes.
-            imagesJson = QJsonObject();
-            projectUpdated = false;
+            return 0;
         } else if (reply == QMessageBox::Cancel) {
             // User has changed mind - do nothing.
             return -1;
         }
-    } else {
-        // Project was not updated since last save
-        // Should be safe to just remove the data
-        imagesJson = QJsonObject();
-        projectUpdated = false;
     }
     return 0;
+}
+
+void ProjectData::clear() {
+    imagesJson = QJsonObject();
+    projectUpdated = false;
 }
 
 int ProjectData::save() {
@@ -141,13 +137,11 @@ int ProjectData::saveWithDialog() {
 }
 
 int ProjectData::open() {
-    if (clean() != 0) {
+    if (clearQuery("Opening project") != 0) {
         return -1;
     }
     QString projPath = projectPath();
     QJsonObject rootJson = QJsonObject();
-    imagesJson = QJsonObject();
-    projectUpdated = false;
     QFile file(projPath);
     if (!file.open(QIODevice::ReadOnly)) {
         qWarning() << "Couldn't open file:" << file.errorString();
@@ -178,36 +172,39 @@ int ProjectData::open() {
 }
 
 int ProjectData::openWithDialog() {
-    if (clean() != 0) {
+    if (clearQuery("Opening project") != 0) {
         return -1;
     }
     QString fileName = openProjectDialog(nullptr, m_projectDir);
     if (fileName.isEmpty()) {
         return -1;
     }
+    clear();
     updateProjectFile(fileName);
     return open();
 }
 
 int ProjectData::createWithDialog() {
-    if (clean() != 0) {
+    if (clearQuery("Creating project") != 0) {
         return -1;
     }
     QString fileName = createProjectDialog(nullptr, m_projectDir);
     if (fileName.isEmpty()) {
         return -1;
     }
+    clear();
     updateProjectFile(fileName);
     return save();
 }
 
 QStringList ProjectData::openImagesWithDialog() {
     QStringList fileList = QStringList();
-    if (clean() != 0) {
+    if (clearQuery("Opening images") != 0) {
         return fileList;
     }
     fileList = openImagesDialog(nullptr, m_projectDir);
     if (!fileList.isEmpty()) {
+        clear();
         QString newProjectDir = QFileInfo(fileList[0]).absolutePath();
         updateProjectFile(newProjectDir, TEMP_PROJECT_FILENAME);
     }
@@ -215,24 +212,26 @@ QStringList ProjectData::openImagesWithDialog() {
 }
 
 int ProjectData::openDir(QString dirPath) {
-    if (clean() != 0) {
+    if (clearQuery("Opening directory") != 0) {
         return -1;
     }
     if (dirPath.isEmpty() || !QDir(dirPath).exists()) {
         return -1;
     }
+    clear();
     updateProjectFile(dirPath, TEMP_PROJECT_FILENAME);
     return 0;
 }
 
 int ProjectData::openDirWithDialog() {
-    if (clean() != 0) {
+    if (clearQuery("Opening directory") != 0) {
         return -1;
     }
     QString dirPath = openDirDialog(nullptr, m_projectDir);
     if (dirPath.isEmpty()) {
         return -1;
     }
+    clear();
     updateProjectFile(dirPath, TEMP_PROJECT_FILENAME);
     return 0;
 }

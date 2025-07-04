@@ -22,7 +22,8 @@ public:
     void extracted(QMap<QString, int> &tagCount, QJsonArray &tagList);
     QMap<QString, int> allTagsCount();
     QJsonObject allTagsCountJson();
-    int clean(QString action = "");
+    int clearQuery(QString action = "");
+    void clear();
     void updateImageData(QString id, QJsonObject data, int selectionCount);
     QJsonObject getImageData(QString id);
 
