@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QWidget>
+#include <QLabel>
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QJsonObject>
@@ -39,6 +40,7 @@ private:
     ImageZoomWidget *imageZoomWidget;
     ParametersTable *parametersTableWidget;
     QDockWidget *parametersTableDock;
+    QLabel *projectPathLabel;
 
     void showEvent(QShowEvent *event) override;
     void onDirOpen(QString dirPath);
@@ -52,6 +54,8 @@ private:
     void openDirClickHandler();
     void openImagesClickHandler();
     void saveSelectionsToProject();
+    void updateProjectPathLabel();
     void updateProjectFile(QString projDir, QString projFile);
+    void projectStatusUpdateHandler(ProjectStatus status);
 };
 #endif // MAINWINDOW_H

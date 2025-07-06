@@ -28,11 +28,21 @@ QString ProjectData::projectFileName() {
 void ProjectData::updateProjectFile(QString projDir, QString projFileName) {
     m_projectDir = projDir;
     m_projectFileName = projFileName;
+    emit statusUpdate({projectPath(), isSaved()});
 }
 
 void ProjectData::updateProjectFile(QString projPath) {
-    m_projectDir = QFileInfo(projPath).absolutePath();
-    m_projectFileName = QFileInfo(projPath).fileName();
+    QFileInfo fInfo = QFileInfo(projPath);
+    updateProjectFile(fInfo.absolutePath(), fInfo.fileName());
+}
+
+void ProjectData::setProjectUpdated(bool state) {
+    projectUpdated = state;
+    emit statusUpdate({projectPath(), isSaved()});
+}
+
+bool ProjectData::isSaved() {
+    return !projectUpdated;
 }
 
 QMap<QString, int> ProjectData::allTagsCount() {
@@ -100,7 +110,7 @@ int ProjectData::clearQuery(QString action) {
 
 void ProjectData::clear() {
     imagesJson = QJsonObject();
-    projectUpdated = false;
+    setProjectUpdated(false);
 }
 
 int ProjectData::save() {
@@ -117,7 +127,7 @@ int ProjectData::save() {
 
     if (file.open(QIODevice::WriteOnly)) {
         file.write(doc.toJson(QJsonDocument::Indented)); // or Compact
-        projectUpdated = false;
+        setProjectUpdated(false);
         file.close();
         return 0;
     }
@@ -240,7 +250,7 @@ void ProjectData::updateImageData(QString id, QJsonObject data, int selectionCou
     if (selectionCount == 0) {
         if (imagesJson.contains(id)) {
             imagesJson.remove(id);
-            projectUpdated = true;
+            setProjectUpdated(true);
         }
         return;
     }
@@ -251,7 +261,7 @@ void ProjectData::updateImageData(QString id, QJsonObject data, int selectionCou
             data["relative-path"] = relativePath;
         }
         if (data != imagesJson[id].toObject()) {
-            projectUpdated = true;
+            setProjectUpdated(true);
         }
         imagesJson[id] = data;
     }

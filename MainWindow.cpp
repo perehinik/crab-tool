@@ -2,6 +2,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QMessageBox>
+#include <QStatusBar>
+#include <QLabel>
 
 #include "MainWindow.h"
 
@@ -38,14 +40,14 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent) {
     )");
     dirNavigatorWidget->setMaximumHeight(200);
 
-    QObject::connect(dirNavigatorWidget, &DirNavigatorWidget::onDirPathChanged, this, &MainWindow::onPathChanged);
+    connect(dirNavigatorWidget, &DirNavigatorWidget::onDirPathChanged, this, &MainWindow::onPathChanged);
 
     imageNavigatorWidget = new ImageNavigatorWidget(this);
     imageNavigatorDock = new QDockWidget("Images", this);
     imageNavigatorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     imageNavigatorDock->setWidget(imageNavigatorWidget);
 
-    QObject::connect(imageNavigatorWidget, &ImageNavigatorWidget::onImageClicked, this, &MainWindow::onImageClicked);
+    connect(imageNavigatorWidget, &ImageNavigatorWidget::onImageClicked, this, &MainWindow::onImageClicked);
 
     imageZoomWidget = new ImageZoomWidget(this);
     imageZoomDock = new QDockWidget("Image Zoom", this);
@@ -54,7 +56,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent) {
     imageZoomWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     imageZoomDock->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
-    QObject::connect(imageWidget, &ImageWidget::onMousePosChanged, imageZoomWidget, &ImageZoomWidget::centerOn);
+    connect(imageWidget, &ImageWidget::onMousePosChanged, imageZoomWidget, &ImageZoomWidget::centerOn);
 
     parametersTableWidget = new ParametersTable(this);
     parametersTableWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
@@ -63,7 +65,16 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent) {
     parametersTableDock->setWidget(parametersTableWidget);
     parametersTableDock->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
 
-    QObject::connect(imageWidget, &ImageWidget::onSelectionChanged, parametersTableWidget, &ParametersTable::setSelection);
+    connect(imageWidget, &ImageWidget::onSelectionChanged, parametersTableWidget, &ParametersTable::setSelection);
+
+    QStatusBar *statusBar = new QStatusBar(this);
+    setStatusBar(statusBar);
+    statusBar->setStyleSheet("QStatusBar { border: solid lightgrey; border-width: 1px; }");
+
+    projectPathLabel = new QLabel(this);
+    statusBar->addWidget(projectPathLabel);
+
+    connect(projectData, &ProjectData::statusUpdate, this, &MainWindow::projectStatusUpdateHandler);
 
     setMenuWidget(toolbox);
     setCentralWidget(imageWidget);
@@ -154,6 +165,14 @@ void MainWindow::onImageClicked(QString imagePath) {
     }
 }
 
+void MainWindow::projectStatusUpdateHandler(ProjectStatus status) {
+    QString projPath = status.projectPath;
+    if (!status.isSaved) {
+        projPath += "*";
+    }
+    projectPathLabel->setText(projPath);
+}
+
 void MainWindow::saveSelectionsToProject() {
     if (imageWidget->isInitialized()) {
         projectData->updateImageData(imageWidget->hash, imageWidget->toJson(), imageWidget->selectionCount());
@@ -162,7 +181,6 @@ void MainWindow::saveSelectionsToProject() {
 
 void MainWindow::showEvent(QShowEvent *event) {
     QMainWindow::showEvent(event);
-
     dirNavigatorWidget->setMaximumHeight(10000);
 }
 

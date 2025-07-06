@@ -4,8 +4,14 @@
 #include <QString>
 #include <QJsonObject>
 
-class ProjectData
-{
+struct ProjectStatus {
+    QString projectPath;
+    bool isSaved;
+};
+
+class ProjectData : public QObject {
+    Q_OBJECT
+
 public:
     ProjectData();
     int save();
@@ -26,6 +32,7 @@ public:
     void clear();
     void updateImageData(QString id, QJsonObject data, int selectionCount);
     QJsonObject getImageData(QString id);
+    bool isSaved();
 
 private:
     QString m_projectDir;
@@ -35,6 +42,10 @@ private:
     bool projectUpdated;
     void updateProjectFile(QString projPath);
     void updateProjectFile(QString projDir, QString projFileName);
+    void setProjectUpdated(bool state);
+
+signals:
+    void statusUpdate(const ProjectStatus status);
 };
 
 #endif // PROJECTDATA_H
