@@ -24,6 +24,7 @@ private:
 public:
     explicit DirNavigatorWidget(QWidget *parent = nullptr);
     void setPath(QString dirPath);
+    bool hasSubfolderWithImages();
 
 signals:
     void onDirPathChanged(QString imagePath);

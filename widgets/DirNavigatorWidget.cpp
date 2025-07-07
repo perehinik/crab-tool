@@ -1,6 +1,8 @@
 #include <QThread>
+#include <QDirIterator>
 
 #include "DirNavigatorWidget.h"
+#include "Constants.h"
 
 DirNavigatorWidget::DirNavigatorWidget(QWidget *parent) : QWidget(parent) {
     setMinimumWidth(180);
@@ -31,9 +33,6 @@ void DirNavigatorWidget::onPathChanged(const QModelIndex &index) {
 }
 
 void DirNavigatorWidget::setPath(QString dirPath) {
-    // while (!initialized) {
-    //     QThread::msleep(100);
-    // }
     this->dirPath = dirPath;
     requestedPath = dirPath;
     model = new QFileSystemModel(this);
@@ -57,4 +56,18 @@ void DirNavigatorWidget::showEvent(QShowEvent *event) {
     if (!initialized) {
         initialized = true;
     }
+}
+
+bool DirNavigatorWidget::hasSubfolderWithImages() {
+    QDirIterator it(this->dirPath, QDir::Dirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        QString subfolder = it.next();
+        QDir subDir(subfolder);
+
+        QStringList imageFiles = subDir.entryList(IMAGE_EXTENSION_FILTERS, QDir::Files);
+        if (!imageFiles.isEmpty()) {
+            return true;  // Found at least one image
+        }
+    }
+    return false;
 }

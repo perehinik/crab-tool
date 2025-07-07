@@ -57,5 +57,6 @@ private:
     void updateProjectPathLabel();
     void updateProjectFile(QString projDir, QString projFile);
     void projectStatusUpdateHandler(ProjectStatus status);
+    void exportProject(const QString type);
 };
 #endif // MAINWINDOW_H

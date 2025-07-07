@@ -34,6 +34,12 @@ ToolboxWidget::ToolboxWidget(QWidget *parent) : QWidget(parent) {
     ToolboxButton *infoButton = new ToolboxButton(QIcon(":/icon/info.png"), "Info", 32, 24, this);
     connect(infoButton->action, &QAction::triggered, this, &ToolboxWidget::showInfoPopup);
 
+    QMenu *exportMenu = new QMenu("Export As", this);
+    exportMenu->setIcon(QIcon(":/icon/export.png"));
+
+    QAction *exportHaarAction = exportMenu->addAction("Haar descriptor");
+    connect(exportHaarAction, &QAction::triggered, this, [this]() { emit onExportProject("HAAR"); });
+
     menuBar = new QMenuBar(this);
     QMenu *fileMenu = menuBar->addMenu("File");
     fileMenu->addAction(createProjectButton->action);
@@ -41,6 +47,7 @@ ToolboxWidget::ToolboxWidget(QWidget *parent) : QWidget(parent) {
     fileMenu->addAction(saveButton->action);
     fileMenu->addAction(openImagesButton->action);
     fileMenu->addAction(openDirButton->action);
+    fileMenu->addMenu(exportMenu);
 
     QMenu *toolsMenu = menuBar->addMenu("Tools");
     toolsMenu->addAction(handToolButton->action);

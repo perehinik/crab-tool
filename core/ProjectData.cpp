@@ -45,6 +45,32 @@ bool ProjectData::isSaved() {
     return !projectUpdated;
 }
 
+QStringList ProjectData::allTags() {
+    QStringList tags;
+    for (auto it = imagesJson.constBegin(); it != imagesJson.constEnd(); ++it) {
+        QJsonObject imageData = it.value().toObject();
+        QJsonArray selectionList = imageData["selection-list"].toArray();
+
+        QJsonArray tagList;
+        for (int i = 0; i < selectionList.size(); ++i) {
+            QJsonObject selectionObj = selectionList.at(i).toObject();
+            tagList = selectionObj["tags"].toArray();
+        }
+
+        for (int i = 0; i < tagList.size(); ++i) {
+            const QJsonValue& value = tagList.at(i);
+            if (!value.isString()) {
+                continue;
+            }
+            QString strVal = value.toString();
+            if (!tags.contains(strVal)) {
+                tags.append(strVal);
+            }
+        }
+    }
+    return tags;
+}
+
 QMap<QString, int> ProjectData::allTagsCount() {
     QMap<QString, int> tagCount;
     for (auto it = imagesJson.constBegin(); it != imagesJson.constEnd(); ++it) {

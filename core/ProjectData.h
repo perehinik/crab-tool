@@ -33,6 +33,7 @@ public:
     void updateImageData(QString id, QJsonObject data, int selectionCount);
     QJsonObject getImageData(QString id);
     bool isSaved();
+    QStringList allTags();
 
 private:
     QString m_projectDir;

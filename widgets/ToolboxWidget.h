@@ -30,6 +30,9 @@ public:
     ToolboxButton *zoomToExtentsToolButton;
 
     void showInfoPopup();
+
+signals:
+    void onExportProject(const QString type);
 };
 
 #endif // TOOLBOXWIDGET_H

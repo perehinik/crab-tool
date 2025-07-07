@@ -6,6 +6,7 @@
 #include <QLabel>
 
 #include "MainWindow.h"
+#include "ExportHaar.h"
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent) {
     projectData = new ProjectData();
@@ -24,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent) {
     connect(toolbox->zoomInToolButton->action, &QAction::triggered, imageWidget, &ImageWidget::zoomIn);
     connect(toolbox->zoomOutToolButton->action, &QAction::triggered, imageWidget, &ImageWidget::zoomOut);
     connect(toolbox->zoomToExtentsToolButton->action, &QAction::triggered, imageWidget, &ImageWidget::zoomToExtent);
+    connect(toolbox, &ToolboxWidget::onExportProject, this, &MainWindow::exportProject);
 
     dirNavigatorWidget = new DirNavigatorWidget(this);
     dirNavigatorDock = new QDockWidget("Directories", this);
@@ -68,6 +70,7 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent) {
     connect(imageWidget, &ImageWidget::onSelectionChanged, parametersTableWidget, &ParametersTable::setSelection);
 
     QStatusBar *statusBar = new QStatusBar(this);
+    statusBar->setMaximumHeight(25);
     setStatusBar(statusBar);
     statusBar->setStyleSheet("QStatusBar { border: solid lightgrey; border-width: 1px; }");
 
@@ -95,12 +98,21 @@ void MainWindow::saveProjectClickHandler() {
     projectData->saveWithDialog();
 }
 
+void MainWindow::exportProject(const QString type) {
+    ExportHaar dialog(projectData, this);
+    dialog.exec();
+}
+
 void MainWindow::createProjectClickHandler() {
     saveSelectionsToProject();
     if (projectData->createWithDialog() == 0) {
         dirNavigatorWidget->setPath(projectData->projectDir());
         imageNavigatorWidget->setPath(projectData->projectDir());
-        dirNavigatorDock->show();
+        if (dirNavigatorWidget->hasSubfolderWithImages()) {
+            dirNavigatorDock->show();
+        } else {
+            dirNavigatorDock->hide();
+        }
         imageWidget->clear();
     }
 }
@@ -110,12 +122,17 @@ void MainWindow::openProjectClickHandler() {
     if (projectData->openWithDialog() == 0) {
         dirNavigatorWidget->setPath(projectData->projectDir());
         imageNavigatorWidget->setPath(projectData->projectDir());
-        dirNavigatorDock->show();
+        if (dirNavigatorWidget->hasSubfolderWithImages()) {
+            dirNavigatorDock->show();
+        } else {
+            dirNavigatorDock->hide();
+        }
         imageWidget->clear();
     }
 
     // Update this at some point, allValues should be private and have different name.
     parametersTableWidget->objectsEdit->allValues = projectData->allTagsCount();
+    qDebug() << projectData->allTagsCount();
 }
 
 void MainWindow::openDirClickHandler() {
@@ -123,7 +140,11 @@ void MainWindow::openDirClickHandler() {
     if (projectData->openDirWithDialog() == 0) {
         dirNavigatorWidget->setPath(projectData->projectDir());
         imageNavigatorWidget->setPath(projectData->projectDir());
-        dirNavigatorDock->show();
+        if (dirNavigatorWidget->hasSubfolderWithImages()) {
+            dirNavigatorDock->show();
+        } else {
+            dirNavigatorDock->hide();
+        }
         imageWidget->clear();
     }
 }
