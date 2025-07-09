@@ -10,8 +10,7 @@ public:
     ExportHaar(ProjectData *data, QWidget *parent = nullptr);
 
 private:
-    virtual void acceptExportHandler();
-    virtual void rejectExportHandler();
+    void exportAndSave() override;
 };
 
 #endif // EXPORTHAAR_H

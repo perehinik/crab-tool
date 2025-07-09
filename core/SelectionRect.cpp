@@ -3,59 +3,18 @@
 #include <QJsonArray>
 #include <QPoint>
 #include <QtMath>
+#include <QTimer>
 
-SelectionRect::SelectionRect(QGraphicsScene *scene, const QRectF rect, qreal scale) {
-    this->scale = scale;
-    graphicsRect = scene->addRect(rect, linePen);
-    buildCorners(scene, rect);
+SelectionRect::SelectionRect(const QRectF rect) {
+    setRect(rect);
 }
 
-SelectionRect::SelectionRect(QGraphicsScene *scene, const QJsonObject &json, qreal scale) {
-    this->scale = scale;
-    QRectF rect = QRectF(0, 0, 1, 1);
-    this->graphicsRect = scene->addRect(rect, linePen);
-    buildCorners(scene, rect);
+SelectionRect::SelectionRect(const QJsonObject &json) {
     fromJson(json);
 }
 
-void SelectionRect::buildCorners(QGraphicsScene *scene, QRectF rect) {
-    corners = {
-        rect.topLeft(), rect.topRight(),
-        rect.bottomLeft(), rect.bottomRight()
-    };
-    for (int i = 0; i < corners.size(); i++) {
-        QPointF corner = corners[i];
-        qreal circleSizeScaled = circleSize * scale;
-
-        QRectF circleRect(
-            corner.x() - (circleSizeScaled / 2),
-            corner.y() - (circleSizeScaled / 2),
-            circleSizeScaled,
-            circleSizeScaled
-            );
-
-        QGraphicsEllipseItem *ellipse = scene->addEllipse(circleRect, circlePen, circleBrush);
-        ellipses.append(ellipse);
-    }
-}
-
-void SelectionRect::removeFromScene() {
-    if (graphicsRect && graphicsRect->scene()) {
-        graphicsRect->scene()->removeItem(graphicsRect);
-    }
-    if (graphicsRect) {
-        delete graphicsRect;
-        graphicsRect = nullptr;
-    }
-    for (int i = 0; i < ellipses.size(); i++) {
-        if (ellipses[i] && ellipses[i]->scene()) {
-            ellipses[i]->scene()->removeItem(ellipses[i]);
-        }
-        if (ellipses[i]) {
-            delete ellipses[i];
-            ellipses[i] = nullptr;
-        }
-    }
+QRectF SelectionRect::getRect() {
+    return rect;
 }
 
 QJsonObject SelectionRect::toJson() {
@@ -99,51 +58,12 @@ void SelectionRect::fromJson(const QJsonObject &json) {
 }
 
 void SelectionRect::setRect(QRectF rect) {
-    // Update rectangle
-    graphicsRect->setRect(rect);
-    // Update circles
+    this->rect = rect;
     corners = {
         rect.topLeft(), rect.topRight(),
         rect.bottomLeft(), rect.bottomRight()
     };
-
-    for (int i = 0; i < ellipses.size(); i++) {
-        QPointF corner = corners[i];
-        qreal circleSizeScaled = circleSize * scale;
-        qreal circleStartX = corner.x() - (circleSizeScaled / 2);
-        qreal circleStartY = corner.y() - (circleSizeScaled / 2);
-        QRectF circleRect(circleStartX, circleStartY, circleSizeScaled, circleSizeScaled);
-        ellipses[i]->setRect(circleRect);
-    }
-}
-
-void SelectionRect::activate() {
-    for (int i = 0; i < ellipses.size(); i++) {
-        if (ellipses[i] && ellipses[i]->scene()) {
-            ellipses[i]->setPen(circlePenActive);
-            ellipses[i]->setBrush(circleBrushActive);
-        }
-    }
-}
-
-void SelectionRect::deactivate() {
-    for (int i = 0; i < ellipses.size(); i++) {
-        if (ellipses[i] && ellipses[i]->scene()) {
-            ellipses[i]->setPen(circlePen);
-            ellipses[i]->setBrush(circleBrush);
-        }
-    }
-}
-
-QRectF SelectionRect::getRect() {
-    return graphicsRect->rect();
-}
-
-void SelectionRect::setScale(qreal scale) {
-    this->scale = scale;
-    setRect(graphicsRect->rect());
-    linePen.setWidthF(lineWidth * scale);
-    graphicsRect->setPen(linePen);
+    updateGraphicsItems();
 }
 
 QPointF *SelectionRect::getCornerPoint(QPointF point) {
@@ -173,13 +93,117 @@ QPointF *SelectionRect::getOppositePoint(QPointF point) {
     return &corners[0];
 }
 
+// ---------------------------------------------------------------------------
+// Graphics items
+// ---------------------------------------------------------------------------
+
+void SelectionRect::addToScene(QGraphicsScene *scene) {
+    if (graphicsRect) {
+        removeFromScene();
+    }
+    graphicsRect = scene->addRect(rect, linePen);
+    graphicsRect->setVisible(true);
+    graphicsRect->setZValue(100);
+    buildCornerEllipses(scene);
+    scene->update();
+}
+
+void SelectionRect::removeFromScene() {
+    if (graphicsRect && graphicsRect->scene()) {
+        graphicsRect->scene()->removeItem(graphicsRect);
+    }
+    if (graphicsRect) {
+        graphicsRect = nullptr;
+    }
+    for (int i = 0; i < ellipses.size(); i++) {
+        if (ellipses[i] && ellipses[i]->scene()) {
+            ellipses[i]->scene()->removeItem(ellipses[i]);
+        }
+        if (ellipses[i]) {
+            ellipses[i] = nullptr;
+        }
+    }
+    ellipses.clear();
+}
+
+void SelectionRect::buildCornerEllipses(QGraphicsScene *scene) {
+    if (!graphicsRect) {
+        return;
+    }
+    for (int i = 0; i < corners.size(); i++) {
+        QPointF corner = corners[i];
+        qreal circleSizeScaled = circleSize * scale;
+
+        QRectF circleRect(
+            corner.x() - (circleSizeScaled / 2),
+            corner.y() - (circleSizeScaled / 2),
+            circleSizeScaled,
+            circleSizeScaled
+            );
+
+        QGraphicsEllipseItem *ellipse = scene->addEllipse(circleRect, circlePen, circleBrush);
+        ellipse->setVisible(true);
+        ellipse->setZValue(110);
+        ellipses.append(ellipse);
+    }
+}
+
+void SelectionRect::updateGraphicsItems() {
+    if (!graphicsRect) {
+        return;
+    }
+    graphicsRect->setRect(rect);
+    for (int i = 0; i < ellipses.size(); i++) {
+        QPointF corner = corners[i];
+        qreal circleSizeScaled = circleSize * scale;
+        qreal circleStartX = corner.x() - (circleSizeScaled / 2);
+        qreal circleStartY = corner.y() - (circleSizeScaled / 2);
+        QRectF circleRect(circleStartX, circleStartY, circleSizeScaled, circleSizeScaled);
+        ellipses[i]->setRect(circleRect);
+    }
+}
+
+void SelectionRect::activate() {
+    if (!graphicsRect) {
+        return;
+    }
+    for (int i = 0; i < ellipses.size(); i++) {
+        if (ellipses[i] && ellipses[i]->scene()) {
+            ellipses[i]->setPen(circlePenActive);
+            ellipses[i]->setBrush(circleBrushActive);
+        }
+    }
+}
+
+void SelectionRect::deactivate() {
+    if (!graphicsRect) {
+        return;
+    }
+    for (int i = 0; i < ellipses.size(); i++) {
+        if (ellipses[i] && ellipses[i]->scene()) {
+            ellipses[i]->setPen(circlePen);
+            ellipses[i]->setBrush(circleBrush);
+        }
+    }
+}
+
+void SelectionRect::setScale(qreal newScale) {
+    if (!graphicsRect) {
+        return;
+    }
+    scale = newScale;
+    updateGraphicsItems();
+    linePen.setWidthF(lineWidth * newScale);
+    graphicsRect->setPen(linePen);
+}
+
 qreal SelectionRect::getVisibleArea() {
-    QRectF rect = getRect();
     qreal vertical = QLineF(rect.topLeft(), rect.topRight()).length() / scale;
     qreal horisontal = QLineF(rect.topLeft(), rect.bottomLeft()).length() / scale;
     return vertical * horisontal;
 }
 
-SelectionRect::~SelectionRect(){
+SelectionRect::~SelectionRect() {
+    emit aboutToBeDeleted();
     removeFromScene();
 }

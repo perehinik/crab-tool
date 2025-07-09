@@ -10,9 +10,8 @@
 #include <QMessageBox>
 
 #include "MainImageWidget.h"
-#include "Checksum.h"
 
-ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(parent) {
+ImageWidget::ImageWidget(QWidget *parent) : QGraphicsView(parent) {
     setAttribute(Qt::WA_StyledBackground, true);
     setMinimumWidth(300);
     setStyleSheet("border: solid lightgrey; border-width: 0px 1px 0px 1px;");
@@ -22,12 +21,6 @@ ImageWidget::ImageWidget(QWidget *parent, QString imagePath) : QGraphicsView(par
     setRenderHint(QPainter::Antialiasing);
     setRenderHint(QPainter::SmoothPixmapTransform);
     setDragMode(QGraphicsView::NoDrag);
-    if (QFile(imagePath).exists()) {
-        setImage(imagePath);
-    }
-
-    createSelectionPopup();
-
     setMouseTracking(true);
 }
 
@@ -35,49 +28,20 @@ bool ImageWidget::isInitialized() {
     return initialized;
 }
 
-QJsonObject ImageWidget::toJson() {
-    QJsonObject obj;
-
-    obj["type"] = "image-data";
-    obj["image-path"] = imagePath;
-    obj["image-filename"] = QFileInfo(imagePath).fileName();
-    obj["sha256"] = hash;
-
-    QJsonArray rectArray;
-    for (int i = 0; i < rectangleList.length(); ++i) {
-        if (rectangleList[i]) {
-            rectArray.append(rectangleList[i]->toJson());
-        }
-    }
-    obj["selection-list"] = rectArray;
-    return obj;
-}
-
-void ImageWidget::fromJson(const QJsonObject &json) {
-    if (json["type"].toString() != "image-data") {
-        return;
-    }
-    // Try to load image if checksum is not the same as in project/JSON
-    if (json["sha256"].toString() != hash) {
-        setImage(json["image-path"].toString());
-    }
-    QJsonArray rectArray = json["selection-list"].toArray();
-    for (int i = 0; i < rectArray.size(); ++i) {
-        QJsonObject jsonObj = rectArray.at(i).toObject();
-        rectangleList.append(new SelectionRect(scene, jsonObj, (qreal)1.0 / transform().m11()));
-    }
-}
-
 void ImageWidget::clear() {
-    for (int i = 0; i < rectangleList.length(); i++) {
-        delete rectangleList[i];
-    }
-    scene->clear();
-    rectangleList.clear();
     selectionPopup = nullptr;
     selectionPopupProxy = nullptr;
     activateRect(nullptr);
+    updateZoomAfterNextRefresh = false;
     initialized = false;
+    if (imageData) {
+        imageData->removeFromScene();
+    }
+    disconnect(imageDataDeleteConnection);
+    imageData = nullptr;
+    if (imageItem) {
+        imageItem->setVisible(false);
+    }
 }
 
 void ImageWidget::createSelectionPopup() {
@@ -116,28 +80,37 @@ bool ImageWidget::forwardMouseEvent(QMouseEvent *event) {
     return false;
 }
 
-void ImageWidget::setImage(QString imagePath) {
+void ImageWidget::setImageData(ImageData *imgData) {
     clear();
+    // This allows to remove ImageData pointer before object is destroyed by ProjectData
+    imageDataDeleteConnection = connect(imgData, &ImageData::aboutToBeDeleted, this, &ImageWidget::clear);
+    imageData = imgData;
     createSelectionPopup();
-    pixmap = QPixmap(imagePath);
+    pixmap = QPixmap(imageData->imagePath);
     if (pixmap.isNull()) {
-        QMessageBox::critical(this, "Error", "Image loading error!\nFile: " + imagePath);
-    }
-
-    hash = sha256(imagePath);
-    if (hash.isEmpty() && !pixmap.isNull()) {
-        QMessageBox::critical(this, "Error", "Image checksum calculation error!\nFile: " + imagePath);
-    }
-
-    if (!pixmap.isNull()) {
-        imageItem = scene->addPixmap(pixmap);
-        // imageItem->setTransformationMode(Qt::SmoothTransformation);
-        imageItem->setPos(0, 0);
+        QMessageBox::critical(this, "Error", "Image loading error!\nFile: " + imageData->imagePath);
+    } else {
+        if (!imageItem) {
+            imageItem = scene->addPixmap(pixmap);
+        } else {
+            imageItem->setPixmap(pixmap);
+            imageItem->setPos(0, 0);
+        }
+        imageItem->setVisible(true);
         scene->setSceneRect(pixmap.rect());
-        this->imagePath = imagePath;
+        imageData->addToScene(scene);
+        updateZoomAfterNextRefresh = true;
         initialized = true;
     }
     zoomToExtent();
+}
+
+void ImageWidget::paintEvent(QPaintEvent *event) {
+    QGraphicsView::paintEvent(event);
+    if (updateZoomAfterNextRefresh && imageData) {
+        updateZoomAfterNextRefresh = false;
+        imageData->setScale(1.0 / transform().m11());
+    }
 }
 
 void ImageWidget::checkZoom() {
@@ -170,7 +143,9 @@ void ImageWidget::resizeEvent(QResizeEvent *event) {
         zoomToExtent();
     }
     checkZoom();
-    updateRect();
+    if (imageData) {
+        imageData->setScale(1 / transform().m11());
+    }
 }
 
 void ImageWidget::setZoom(double newZoomLevel) {
@@ -197,7 +172,9 @@ void ImageWidget::setZoom(double newZoomLevel) {
 
     // Prevent zooming out beyond full-scene view
     checkZoom();
-    updateRect();
+    if (imageData) {
+        imageData->setScale(1 / transform().m11());
+    }
 }
 
 void ImageWidget::zoomIn() {
@@ -231,7 +208,7 @@ void ImageWidget::wheelEvent(QWheelEvent *event) {
 }
 
 void ImageWidget::mousePressEvent(QMouseEvent *event) {
-    if (!initialized || forwardMouseEvent(event)) {
+    if (!initialized || forwardMouseEvent(event) || !imageData) {
         return;
     }
 
@@ -251,9 +228,10 @@ void ImageWidget::mousePressEvent(QMouseEvent *event) {
         activateRectByPoint(latestPressPos);
         if (!currentRect) {
             startPos = latestPressPos;
-            SelectionRect * rect = new SelectionRect(scene, QRectF(startPos, startPos), (qreal)1.0 / transform().m11());
+            SelectionRect * rect = new SelectionRect(QRectF(startPos, startPos));
+            rect->addToScene(scene);
             rect->setScale(1 / transform().m11());
-            rectangleList.append(rect);
+            imageData->appendSelection(rect);
             activateRect(rect);
         }
         selectionResizeStarted = true;
@@ -301,17 +279,17 @@ void ImageWidget::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
-    if (!initialized || forwardMouseEvent(event)) {
+    if (!initialized || forwardMouseEvent(event) || !imageData) {
         return;
     }
     if (event->button() == Qt::LeftButton && currentRect && selectionResizeStarted) {
         // ToDo: Check if rect is too small to add
-        if (!rectangleList.contains(currentRect) ) {
-            rectangleList.append(currentRect);
+        if (!imageData->containsSelection(currentRect) ) {
+            imageData->appendSelection(currentRect);
         }
         if (currentRect->getVisibleArea() < 60) {
-            rectangleList.removeAll(currentRect);
-            delete currentRect;
+            imageData->deleteRect(currentRect);
+            currentRect = nullptr;
             activateRect(nullptr);
         }
         selectionResizeStarted = false;
@@ -319,24 +297,17 @@ void ImageWidget::mouseReleaseEvent(QMouseEvent *event) {
     QGraphicsView::mouseReleaseEvent(event);
 }
 
-void ImageWidget::updateRect() {
-    qreal scale = 1 / transform().m11();
-    for (int i = 0; i < rectangleList.size(); ++i) {
-        rectangleList[i]->setScale(scale);
-    }
-}
-
 SelectionRect * ImageWidget::getRectByPoint(QPointF point) {
     QPointF *preActivatedPoint = nullptr;
     SelectionRect * activatedRect = nullptr;
     qreal distance = 9999;
 
-    for (int i = 0; i < rectangleList.size(); ++i) {
-        preActivatedPoint = rectangleList[i]->getCornerPoint(point);
+    for (int i = 0; i < imageData->rectangleList.size(); ++i) {
+        preActivatedPoint = imageData->rectangleList[i]->getCornerPoint(point);
         if (!preActivatedPoint) {
             continue;
         } else if (!activatedRect || QLineF(*preActivatedPoint, point).length() < distance) {
-            activatedRect = rectangleList[i];
+            activatedRect = imageData->rectangleList[i];
             startPos = *activatedRect->getOppositePoint(*preActivatedPoint);
             distance = abs(QLineF(startPos, point).length());
         }
@@ -349,10 +320,13 @@ void ImageWidget::activateRectByPoint(QPointF point) {
 }
 
 void ImageWidget::activateRect(SelectionRect * rect) {
-    if (currentRect && rectangleList.contains(currentRect)) {
+    if (!imageData) {
+        return;
+    }
+    if (currentRect && imageData->containsSelection(currentRect)) {
         currentRect->deactivate();
     }
-    if (rectangleList.contains(rect)) {
+    if (rect && imageData->containsSelection(rect)) {
         currentRect = rect;
         rect->activate();
     } else {
@@ -363,14 +337,10 @@ void ImageWidget::activateRect(SelectionRect * rect) {
 
 void ImageWidget::selectionPopupDelete() {
     SelectionRect * activatedRect = getRectByPoint(latestPressPos);
-    rectangleList.removeAll(activatedRect);
-    delete activatedRect;
+    imageData->deleteRect(activatedRect);
+    activatedRect = nullptr;
     activateRect(nullptr);
     selectionPopupProxy->setVisible(false);
-}
-
-int ImageWidget::selectionCount() {
-    return rectangleList.length();
 }
 
 ImageWidget::~ImageWidget() {

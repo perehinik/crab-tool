@@ -4,11 +4,12 @@
 #include <QGraphicsScene>
 #include <QGraphicsEllipseItem>
 
-class SelectionRect
-{
+class SelectionRect : public QObject {
+    Q_OBJECT
+
 public:
-    SelectionRect(QGraphicsScene *scene, const QRectF rect, qreal scale = 6);
-    SelectionRect(QGraphicsScene *scene, const QJsonObject &json, qreal scale = 6);
+    SelectionRect(const QRectF rect);
+    SelectionRect(const QJsonObject &json);
     QStringList tags;
     QPointF *getCornerPoint(QPointF point);
     QPointF *getOppositePoint(QPointF point);
@@ -20,14 +21,16 @@ public:
     void removeFromScene();
     void deactivate();
     void activate();
-    void buildCorners(QGraphicsScene *scene, QRectF rect);
+
     QJsonObject toJson();
     void fromJson(const QJsonObject &json);
+    void addToScene(QGraphicsScene *scene);
     ~SelectionRect();
 
 private:
-    QGraphicsRectItem *graphicsRect = nullptr;
+    QRectF rect;
     QList<QPointF> corners;
+    QGraphicsRectItem *graphicsRect = nullptr;
     QList<QGraphicsEllipseItem*> ellipses;
 
     qreal lineWidth = 2;
@@ -40,6 +43,12 @@ private:
 
     QPen circlePenActive = QPen(QColor(255, 0, 0, 255), 0);
     QBrush circleBrushActive = QBrush(QColor(255, 0, 0, 255));
+
+    void buildCornerEllipses(QGraphicsScene *scene);
+    void updateGraphicsItems();
+
+signals:
+    void aboutToBeDeleted();
 };
 
 #endif // SELECTIONRECT_H

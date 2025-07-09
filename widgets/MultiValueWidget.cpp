@@ -126,14 +126,16 @@ void MultiValueWidget::handleListItemClicked(QListWidgetItem *item) {
     }
 }
 
-void MultiValueWidget::addValue(const QString &text) {
+void MultiValueWidget::addValue(const QString &text, bool updateValueCount) {
     if (values().contains(text)) {
         return;
     }
     if (!allValues.contains(text)) {
         allValues[text] = 0;
     }
-    allValues[text] += 1;
+    if (updateValueCount) {
+        allValues[text] += 1;
+    }
 
     QWidget *tag = new QWidget(this);
     tag->setProperty("tagText", text);
@@ -187,7 +189,7 @@ QStringList MultiValueWidget::values() const {
 void MultiValueWidget::setValues(QStringList valList) {
     clear();
     for (int i = 0; i < valList.length(); i++) {
-        addValue(valList[i]);
+        addValue(valList[i], false);
     }
 }
 

@@ -53,7 +53,6 @@ private:
     void createProjectClickHandler();
     void openDirClickHandler();
     void openImagesClickHandler();
-    void saveSelectionsToProject();
     void updateProjectPathLabel();
     void updateProjectFile(QString projDir, QString projFile);
     void projectStatusUpdateHandler(ProjectStatus status);

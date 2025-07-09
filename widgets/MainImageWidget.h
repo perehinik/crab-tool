@@ -10,6 +10,7 @@
 
 #include "SelectionRect.h"
 #include "SelectionPopup.h"
+#include "ImageData.h"
 
 #define MAIN_IMG_MAX_ZOOM 20
 #define MAIN_IMG_MIN_ZOOM 1
@@ -19,20 +20,14 @@ class ImageWidget : public QGraphicsView {
     Q_OBJECT
 
 public:
-    explicit ImageWidget(QWidget *parent = nullptr, const QString imagePath = nullptr);
+    explicit ImageWidget(QWidget *parent = nullptr);
 
-    QString imagePath;
-    QString hash;
-
-    void setImage(QString imagePath);
+    void setImageData(ImageData *imgData);
     void setZoom(double newZoomLevel);
     void zoomIn();
     void zoomOut();
     void zoomToExtent();
     void clear();
-    QJsonObject toJson();
-    void fromJson(const QJsonObject &json);
-    int selectionCount();
     bool isInitialized();
     ~ImageWidget();
 
@@ -46,30 +41,33 @@ protected:
     void updateRect();
     void activateRectByPoint(QPointF point);
     void activateRect(SelectionRect * rect);
+    void paintEvent(QPaintEvent *event) override;
 
 private:
+    ImageData *imageData = nullptr;
+
     QGraphicsScene *scene = nullptr;
     QGraphicsPixmapItem *imageItem = nullptr;
     double zoomLevel = 1.0;
     const double zoomStep = 1.15;
     bool resized = false;
     bool initialized = false;
+    bool updateZoomAfterNextRefresh = false;
     bool selectionResizeStarted = false;
     SelectionPopup * selectionPopup = nullptr;
     QGraphicsProxyWidget *selectionPopupProxy = nullptr;
 
-    QList<SelectionRect*> rectangleList;
     SelectionRect *currentRect = nullptr;
     QPointF startPos;
     QPointF latestPressPos;
     QPixmap pixmap;
 
-    QPen rectanglePen = QPen(Qt::green, 20);
-
     void selectionPopupDelete();
     void createSelectionPopup();
     bool forwardMouseEvent(QMouseEvent *event);
     SelectionRect * getRectByPoint(QPointF point);
+
+    QMetaObject::Connection imageDataDeleteConnection;
 
 signals:
     void onMousePosChanged(QPointF position);

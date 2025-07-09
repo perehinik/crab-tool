@@ -14,10 +14,6 @@ ExportHaar::ExportHaar(ProjectData *data, QWidget *parent)
     setWindowTitle("Export Haar descriptor");
 }
 
-void ExportHaar::acceptExportHandler() {
-    this->accept();
-}
-
-void ExportHaar::rejectExportHandler() {
-    this->reject();
+void ExportHaar::exportAndSave() {
+    // Still needs to be implemented
 }

@@ -4,6 +4,8 @@
 #include <QString>
 #include <QJsonObject>
 
+#include "ImageData.h"
+
 struct ProjectStatus {
     QString projectPath;
     bool isSaved;
@@ -14,6 +16,7 @@ class ProjectData : public QObject {
 
 public:
     ProjectData();
+    ~ProjectData();
     int save();
     int saveWithDialog();
     int open();
@@ -31,21 +34,22 @@ public:
     int clearQuery(QString action = "");
     void clear();
     void updateImageData(QString id, QJsonObject data, int selectionCount);
-    QJsonObject getImageData(QString id);
+    ImageData * getImageData(QString imagePath);
     bool isSaved();
     QStringList allTags();
 
 private:
+    QMap<QString, ImageData*> imageMap;
     QString m_projectDir;
     QString m_projectFileName;
 
-    QJsonObject imagesJson;
     bool projectUpdated;
     void updateProjectFile(QString projPath);
     void updateProjectFile(QString projDir, QString projFileName);
     void setProjectUpdated(bool state);
 
 signals:
+    void aboutToBeDeleted();
     void statusUpdate(const ProjectStatus status);
 };
 

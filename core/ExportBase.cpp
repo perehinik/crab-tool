@@ -7,6 +7,8 @@
 #include <QListWidgetItem>
 #include <QFileDialog>
 #include <QIcon>
+#include <QTimer>
+#include <QMessageBox>
 
 ExportBase::ExportBase(ProjectData *data, QWidget *parent)
     : QDialog(parent)
@@ -18,6 +20,8 @@ ExportBase::ExportBase(ProjectData *data, QWidget *parent)
 
     // Directory input and browse button
     pathEdit = new QLineEdit(this);
+    pathEdit->setText(data->projectDir());
+
     QPushButton *browseBtn = new QPushButton(this);
     browseBtn->setIcon(QIcon(":/icon/folder-fill.png"));
     connect(browseBtn, &QPushButton::clicked, this, &ExportBase::openDirectoryDialog);
@@ -44,20 +48,42 @@ ExportBase::ExportBase(ProjectData *data, QWidget *parent)
             tagList->item(i)->setCheckState(Qt::Unchecked);
     });
 
+    errorLabel = new QLabel(this);
+    errorLabel->hide();
+    errorLabel->setStyleSheet("color: red; font-size: 11px;");
+
     buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttons, &QDialogButtonBox::accepted, this, &ExportBase::acceptExportHandler);
     connect(buttons, &QDialogButtonBox::rejected, this, &ExportBase::rejectExportHandler);
 
     layout->addWidget(pathEdit, 0, 0, 1, 4);
     layout->addWidget(browseBtn, 0, 4, 1, 1);
-    layout->addWidget(selectAllBtn, 1, 0, 1, 1);
-    layout->addWidget(deselectAllBtn, 1, 1, 1, 1);
-    layout->addWidget(tagList, 2, 0, 1, 5);
-    layout->addWidget(buttons, 4, 2, 1, 2);
+    layout->addWidget(selectAllBtn, 2, 0, 1, 1);
+    layout->addWidget(deselectAllBtn, 2, 1, 1, 1);
+    layout->addWidget(tagList, 4, 0, 1, 5);
+    layout->addWidget(errorLabel, 6, 0, 1, 5);
+    layout->addWidget(buttons, 8, 2, 1, 2);
+}
+
+void ExportBase::exportAndSave() {
+    QMessageBox::information(this, "Notice", "Please implement /void exportAndSave()/.", QMessageBox::Cancel);
+}
+
+void ExportBase::showError(QString error) {
+    errorLabel->setText(error);
+    errorLabel->show();
+    QTimer::singleShot(2000, this, [this]() {
+        errorLabel->hide();
+    });
 }
 
 void ExportBase::acceptExportHandler() {
-    this->accept();
+    if (QDir(pathEdit->text()).exists()) {
+        exportAndSave();
+        this->accept();
+    } else {
+        showError("Directory doesn't exist !");
+    }
 }
 
 void ExportBase::rejectExportHandler() {
@@ -65,7 +91,11 @@ void ExportBase::rejectExportHandler() {
 }
 
 void ExportBase::openDirectoryDialog() {
-    QString dir = QFileDialog::getExistingDirectory(this, "Select Export Directory");
+    QString dir = QFileDialog::getExistingDirectory(
+        this,
+        "Select Export Directory",
+        QDir(pathEdit->text()).exists() ? pathEdit->text(): data->projectDir()
+    );
     if (!dir.isEmpty()) {
         pathEdit->setText(dir);
     }

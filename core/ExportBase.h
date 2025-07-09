@@ -6,6 +6,7 @@
 #include <QDialog>
 #include <QStringList>
 #include <QDialogButtonBox>
+#include <QLabel>
 
 class QLineEdit;
 class QPushButton;
@@ -27,10 +28,14 @@ private:
     ProjectData * data;
     QDialogButtonBox *buttons;
     QLineEdit *pathEdit;
+    QLabel *errorLabel;
     QListWidget *tagList;
 
-    virtual void acceptExportHandler();
-    virtual void rejectExportHandler();
+    void acceptExportHandler();
+    void rejectExportHandler();
+    void showError(QString error);
+
+    virtual void exportAndSave();
 };
 
 #endif // EXPORTBASE_H

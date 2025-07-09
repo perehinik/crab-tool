@@ -94,7 +94,6 @@ MainWindow::MainWindow(QWidget *parent): QMainWindow(parent) {
 }
 
 void MainWindow::saveProjectClickHandler() {
-    saveSelectionsToProject();
     projectData->saveWithDialog();
 }
 
@@ -104,7 +103,6 @@ void MainWindow::exportProject(const QString type) {
 }
 
 void MainWindow::createProjectClickHandler() {
-    saveSelectionsToProject();
     if (projectData->createWithDialog() == 0) {
         dirNavigatorWidget->setPath(projectData->projectDir());
         imageNavigatorWidget->setPath(projectData->projectDir());
@@ -118,7 +116,6 @@ void MainWindow::createProjectClickHandler() {
 }
 
 void MainWindow::openProjectClickHandler() {
-    saveSelectionsToProject();
     if (projectData->openWithDialog() == 0) {
         dirNavigatorWidget->setPath(projectData->projectDir());
         imageNavigatorWidget->setPath(projectData->projectDir());
@@ -128,15 +125,12 @@ void MainWindow::openProjectClickHandler() {
             dirNavigatorDock->hide();
         }
         imageWidget->clear();
+        // Update this at some point, allValues should be private and have different name.
+        parametersTableWidget->objectsEdit->allValues = projectData->allTagsCount();
     }
-
-    // Update this at some point, allValues should be private and have different name.
-    parametersTableWidget->objectsEdit->allValues = projectData->allTagsCount();
-    qDebug() << projectData->allTagsCount();
 }
 
 void MainWindow::openDirClickHandler() {
-    saveSelectionsToProject();
     if (projectData->openDirWithDialog() == 0) {
         dirNavigatorWidget->setPath(projectData->projectDir());
         imageNavigatorWidget->setPath(projectData->projectDir());
@@ -150,7 +144,6 @@ void MainWindow::openDirClickHandler() {
 }
 
 void MainWindow::openImagesClickHandler() {
-    saveSelectionsToProject();
     QStringList fileList = projectData->openImagesWithDialog();
 
     if (!fileList.isEmpty()) {
@@ -176,14 +169,8 @@ void MainWindow::onImageClicked(QString imagePath) {
     if (!QFile(imagePath).exists()) {
         return;
     }
-    saveSelectionsToProject();
-    imageWidget->setImage(imagePath);
+    imageWidget->setImageData(projectData->getImageData(imagePath));
     imageZoomWidget->setImage(imagePath);
-
-    QJsonObject data = projectData->getImageData(imageWidget->hash);
-    if (!data.isEmpty()) {
-        imageWidget->fromJson(data);
-    }
 }
 
 void MainWindow::projectStatusUpdateHandler(ProjectStatus status) {
@@ -192,12 +179,6 @@ void MainWindow::projectStatusUpdateHandler(ProjectStatus status) {
         projPath += "*";
     }
     projectPathLabel->setText(projPath);
-}
-
-void MainWindow::saveSelectionsToProject() {
-    if (imageWidget->isInitialized()) {
-        projectData->updateImageData(imageWidget->hash, imageWidget->toJson(), imageWidget->selectionCount());
-    }
 }
 
 void MainWindow::showEvent(QShowEvent *event) {

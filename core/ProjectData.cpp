@@ -1,13 +1,13 @@
 #include "ProjectData.h"
 #include "Constants.h"
 #include "FileDialog.h"
+#include "Checksum.h"
 
 #include <QDir>
 #include <QJsonArray>
 #include <QMessageBox>
 
 ProjectData::ProjectData() {
-    imagesJson = QJsonObject();
     m_projectDir = QDir::homePath();
     m_projectFileName = TEMP_PROJECT_FILENAME;
     projectUpdated = false;
@@ -47,24 +47,16 @@ bool ProjectData::isSaved() {
 
 QStringList ProjectData::allTags() {
     QStringList tags;
-    for (auto it = imagesJson.constBegin(); it != imagesJson.constEnd(); ++it) {
-        QJsonObject imageData = it.value().toObject();
-        QJsonArray selectionList = imageData["selection-list"].toArray();
+    for (auto it = imageMap.constBegin(); it != imageMap.constEnd(); ++it) {
+        ImageData *imageData = it.value();
 
-        QJsonArray tagList;
-        for (int i = 0; i < selectionList.size(); ++i) {
-            QJsonObject selectionObj = selectionList.at(i).toObject();
-            tagList = selectionObj["tags"].toArray();
-        }
+        for (int i = 0; i < imageData->rectangleList.size(); ++i) {
+            const QStringList &tagList = imageData->rectangleList.at(i)->tags;
 
-        for (int i = 0; i < tagList.size(); ++i) {
-            const QJsonValue& value = tagList.at(i);
-            if (!value.isString()) {
-                continue;
-            }
-            QString strVal = value.toString();
-            if (!tags.contains(strVal)) {
-                tags.append(strVal);
+            for (int i = 0; i < tagList.length(); ++i) {
+                if (!tags.contains(tagList[i])) {
+                    tags.append(tagList[i]);
+                }
             }
         }
     }
@@ -73,26 +65,18 @@ QStringList ProjectData::allTags() {
 
 QMap<QString, int> ProjectData::allTagsCount() {
     QMap<QString, int> tagCount;
-    for (auto it = imagesJson.constBegin(); it != imagesJson.constEnd(); ++it) {
-        QJsonObject imageData = it.value().toObject();
-        QJsonArray selectionList = imageData["selection-list"].toArray();
+    for (auto it = imageMap.constBegin(); it != imageMap.constEnd(); ++it) {
+        ImageData *imageData = it.value();
 
-        QJsonArray tagList;
-        for (int i = 0; i < selectionList.size(); ++i) {
-            QJsonObject selectionObj = selectionList.at(i).toObject();
-            tagList = selectionObj["tags"].toArray();
-        }
+        for (int i = 0; i < imageData->rectangleList.size(); ++i) {
+            const QStringList &tagList = imageData->rectangleList.at(i)->tags;
 
-        for (int i = 0; i < tagList.size(); ++i) {
-            const QJsonValue& value = tagList.at(i);
-            if (!value.isString()) {
-                continue;
-            }
-            QString strVal = value.toString();
-            if (!tagCount.contains(strVal)) {
-                tagCount[strVal] = 1;
-            } else {
-                tagCount[strVal] += 1;
+            for (int i = 0; i < tagList.length(); ++i) {
+                if (!tagCount.contains(tagList[i])) {
+                    tagCount[tagList[i]] = 1;
+                } else {
+                    tagCount[tagList[i]] += 1;
+                }
             }
         }
     }
@@ -135,13 +119,27 @@ int ProjectData::clearQuery(QString action) {
 }
 
 void ProjectData::clear() {
-    imagesJson = QJsonObject();
+    for (auto it = imageMap.constBegin(); it != imageMap.constEnd(); ++it) {
+        delete it.value();
+    }
+    imageMap.clear();
     setProjectUpdated(false);
+}
+
+ProjectData::~ProjectData() {
+    clear();
 }
 
 int ProjectData::save() {
     QString projPath = projectPath();
     QJsonObject rootJson = QJsonObject();
+    QJsonObject imagesJson = QJsonObject();
+    for (auto it = imageMap.constBegin(); it != imageMap.constEnd(); ++it) {
+        ImageData *imageData = it.value();
+        if (!imageData->hash.isEmpty() && imageData->selectionCount() > 0) {
+            imagesJson[imageData->hash] = imageData->toJson();
+        }
+    }
 
     rootJson["tags-frequency"] = allTagsCountJson();
     rootJson["project-version"] = PROJECT_VERSION;
@@ -201,8 +199,16 @@ int ProjectData::open() {
     }
 
     rootJson = doc.object();
-    if (rootJson.contains("images")) {
-        imagesJson = rootJson["images"].toObject();
+    if (!rootJson.contains("images") || !rootJson["images"].isObject()) {
+        return -4;
+    }
+
+    QJsonObject imagesJson = rootJson["images"].toObject();
+    for (auto it = imagesJson.constBegin(); it != imagesJson.constEnd(); ++it) {
+        if (!it.value().isObject()) {
+            continue;
+        }
+        imageMap[it.key()] = new ImageData(m_projectDir, it.value().toObject());
     }
     return 0;
 }
@@ -272,30 +278,15 @@ int ProjectData::openDirWithDialog() {
     return 0;
 }
 
-void ProjectData::updateImageData(QString id, QJsonObject data, int selectionCount) {
-    if (selectionCount == 0) {
-        if (imagesJson.contains(id)) {
-            imagesJson.remove(id);
-            setProjectUpdated(true);
-        }
-        return;
-    }
-    if (!id.isEmpty()) {
-        if (data.contains("image-path")) {
-            QString imagePath = data["image-path"].toString();
-            QString relativePath = QDir(m_projectDir).relativeFilePath(imagePath);
-            data["relative-path"] = relativePath;
-        }
-        if (data != imagesJson[id].toObject()) {
-            setProjectUpdated(true);
-        }
-        imagesJson[id] = data;
-    }
-}
+ImageData * ProjectData::getImageData(QString imagePath) {
+    QString hash = sha256(imagePath);
+    ImageData *imgData;
+    if (!imageMap.contains(hash)) {
+        imgData = new ImageData(m_projectDir, imagePath);
+        imageMap[hash] = imgData;
 
-QJsonObject ProjectData::getImageData(QString id) {
-    if (imagesJson.contains(id)) {
-        return imagesJson[id].toObject();
+    } else {
+        imgData = imageMap[hash];
     }
-    return QJsonObject();
+    return imgData;
 }

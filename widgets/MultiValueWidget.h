@@ -19,7 +19,7 @@ public:
     QStringList values() const;
     QMap<QString, int> allValues;
     void setValues(QStringList valList);
-    void addValue(const QString &value);
+    void addValue(const QString &value, bool updateValueCount = true);
     QSize sizeHint() const override;
     void clear();
     QJsonObject toJson();
