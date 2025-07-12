@@ -35,8 +35,10 @@ public:
     void clear();
     void updateImageData(QString id, QJsonObject data, int selectionCount);
     ImageData * getImageData(QString imagePath);
+    ImageData * getImageDataById(QString hash);
     bool isSaved();
     QStringList allTags();
+    QStringList keys();
 
 private:
     QMap<QString, ImageData*> imageMap;

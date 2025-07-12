@@ -11,6 +11,15 @@ public:
 
 private:
     void exportAndSave() override;
+    void exportPositives(ImageData *imgData, const QStringList &positives);
+    void exportNegatives(ImageData *imgData, const QStringList &negatives);
+    void savePositive(QString tag, QString imgPath, QList<SelectionRect*> &selList);
+    void saveNegative(QString tag, QString imgPath, QList<SelectionRect*> &selList);
+
+    QListWidget *tagListPositives;
+    QListWidget *tagListNegatives;
+    QStringList selectedTagsPositive() const;
+    QStringList selectedTagsNegative() const;
 };
 
 #endif // EXPORTHAAR_H

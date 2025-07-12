@@ -302,12 +302,12 @@ SelectionRect * ImageWidget::getRectByPoint(QPointF point) {
     SelectionRect * activatedRect = nullptr;
     qreal distance = 9999;
 
-    for (int i = 0; i < imageData->rectangleList.size(); ++i) {
-        preActivatedPoint = imageData->rectangleList[i]->getCornerPoint(point);
+    for (int i = 0; i < imageData->selectionList.size(); ++i) {
+        preActivatedPoint = imageData->selectionList[i]->getCornerPoint(point);
         if (!preActivatedPoint) {
             continue;
         } else if (!activatedRect || QLineF(*preActivatedPoint, point).length() < distance) {
-            activatedRect = imageData->rectangleList[i];
+            activatedRect = imageData->selectionList[i];
             startPos = *activatedRect->getOppositePoint(*preActivatedPoint);
             distance = abs(QLineF(startPos, point).length());
         }

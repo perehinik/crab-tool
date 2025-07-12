@@ -14,12 +14,12 @@
 #include "Checksum.h"
 
 ImageData::ImageData(QString projectPath, QString imagePath) {
-    rectangleList.clear();
+    selectionList.clear();
     this->setImage(projectPath, imagePath);
 }
 
 ImageData::ImageData(QString projectPath, const QJsonObject &json) {
-    rectangleList.clear();
+    selectionList.clear();
     this->fromJson(projectPath, json);
 }
 
@@ -33,12 +33,12 @@ QJsonObject ImageData::toJson() {
     obj["sha256"] = hash;
 
     QJsonArray rectArray;
-    for (int i = 0; i < rectangleList.length(); ++i) {
-        if (!rectangleList[i]) {
+    for (int i = 0; i < selectionList.length(); ++i) {
+        if (!selectionList[i]) {
             continue;
         }
-        if (rectangleList[i]) {
-            rectArray.append(rectangleList[i]->toJson());
+        if (selectionList[i]) {
+            rectArray.append(selectionList[i]->toJson());
         }
     }
     obj["selection-list"] = rectArray;
@@ -64,25 +64,25 @@ void ImageData::fromJson(QString projectPath, const QJsonObject &json) {
     QJsonArray rectArray = json["selection-list"].toArray();
     for (int i = 0; i < rectArray.size(); ++i) {
         QJsonObject jsonObj = rectArray.at(i).toObject();
-        rectangleList.append(new SelectionRect(jsonObj));
+        selectionList.append(new SelectionRect(jsonObj));
     }
 }
 
 void ImageData::addToScene(QGraphicsScene *scene) {
-    for (int i = 0; i < rectangleList.length(); ++i) {
-        rectangleList[i]->addToScene(scene);
+    for (int i = 0; i < selectionList.length(); ++i) {
+        selectionList[i]->addToScene(scene);
     }
 }
 
 void ImageData::removeFromScene() {
-    for (int i = 0; i < rectangleList.length(); ++i) {
-        rectangleList[i]->removeFromScene();
+    for (int i = 0; i < selectionList.length(); ++i) {
+        selectionList[i]->removeFromScene();
     }
 }
 
 void ImageData::setScale(qreal scale) {
-    for (int i = 0; i < rectangleList.length(); ++i) {
-        rectangleList[i]->setScale(scale);
+    for (int i = 0; i < selectionList.length(); ++i) {
+        selectionList[i]->setScale(scale);
     }
     previousScale = scale;
 }
@@ -105,35 +105,61 @@ void ImageData::setImage(QString projectPath, QString imagePath) {
 
 void ImageData::deleteRect(SelectionRect *rect) {
     bool deleted = false;
-    for (int i = 0; i < rectangleList.size(); ++i) {
-        if (rectangleList[i] == rect) {
+    for (int i = 0; i < selectionList.size(); ++i) {
+        if (selectionList[i] == rect) {
             if (!deleted) {
-                rectangleList[i]->removeFromScene();
-                delete rectangleList[i];
+                selectionList[i]->removeFromScene();
+                delete selectionList[i];
                 deleted = true;
             }
-            rectangleList[i] = nullptr;
+            selectionList[i] = nullptr;
         }
     }
-    rectangleList.removeAll(nullptr);
+    selectionList.removeAll(nullptr);
+}
+
+QStringList ImageData::tags() {
+    QStringList tagList;
+    for (int i = 0; i < selectionList.size(); ++i) {
+        const QStringList &tagListSelection = selectionList[i]->tags;
+
+        for (int i = 0; i < tagListSelection.length(); ++i) {
+            if (!tagList.contains(tagListSelection[i])) {
+                tagList.append(tagListSelection[i]);
+            }
+        }
+    }
+    return tagList;
+}
+
+void ImageData::getSelectionsByTag(QString tag, QList<SelectionRect*> &selList) {
+    selList.clear();
+    for (int selectionId = 0; selectionId < selectionCount(); selectionId++) {
+        SelectionRect *selection = selectionList[selectionId];
+        for (int tagId = 0; tagId < selection->tags.count(); ++tagId) {
+            if (selection->tags[tagId] == tag) {
+                selList.append(selection);
+            }
+        }
+    }
 }
 
 void ImageData::updateRectScale(qreal scale) {
-    for (int i = 0; i < rectangleList.size(); ++i) {
-        rectangleList[i]->setScale(scale);
+    for (int i = 0; i < selectionList.size(); ++i) {
+        selectionList[i]->setScale(scale);
     }
 }
 
 void ImageData::appendSelection(SelectionRect *rect) {
-    rectangleList.append(rect);
+    selectionList.append(rect);
 }
 
 bool ImageData::containsSelection(SelectionRect *rect) {
-    return rectangleList.contains(rect);
+    return selectionList.contains(rect);
 }
 
 int ImageData::selectionCount() {
-    return rectangleList.length();
+    return selectionList.length();
 }
 
 void ImageData::clear() {
@@ -141,10 +167,10 @@ void ImageData::clear() {
     this->projectPath.clear();
     this->imagePath.clear();
     this->hash.clear();
-    for (int i = 0; i < rectangleList.length(); i++) {
-        delete rectangleList[i];
+    for (int i = 0; i < selectionList.length(); i++) {
+        delete selectionList[i];
     }
-    rectangleList.clear();
+    selectionList.clear();
 }
 
 ImageData::~ImageData() {

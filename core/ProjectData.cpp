@@ -50,8 +50,8 @@ QStringList ProjectData::allTags() {
     for (auto it = imageMap.constBegin(); it != imageMap.constEnd(); ++it) {
         ImageData *imageData = it.value();
 
-        for (int i = 0; i < imageData->rectangleList.size(); ++i) {
-            const QStringList &tagList = imageData->rectangleList.at(i)->tags;
+        for (int i = 0; i < imageData->selectionList.size(); ++i) {
+            const QStringList &tagList = imageData->selectionList.at(i)->tags;
 
             for (int i = 0; i < tagList.length(); ++i) {
                 if (!tags.contains(tagList[i])) {
@@ -68,8 +68,8 @@ QMap<QString, int> ProjectData::allTagsCount() {
     for (auto it = imageMap.constBegin(); it != imageMap.constEnd(); ++it) {
         ImageData *imageData = it.value();
 
-        for (int i = 0; i < imageData->rectangleList.size(); ++i) {
-            const QStringList &tagList = imageData->rectangleList.at(i)->tags;
+        for (int i = 0; i < imageData->selectionList.size(); ++i) {
+            const QStringList &tagList = imageData->selectionList.at(i)->tags;
 
             for (int i = 0; i < tagList.length(); ++i) {
                 if (!tagCount.contains(tagList[i])) {
@@ -276,6 +276,14 @@ int ProjectData::openDirWithDialog() {
     clear();
     updateProjectFile(dirPath, TEMP_PROJECT_FILENAME);
     return 0;
+}
+
+QStringList ProjectData::keys() {
+    return imageMap.keys();
+}
+
+ImageData * ProjectData::getImageDataById(QString hash) {
+    return imageMap[hash];
 }
 
 ImageData * ProjectData::getImageData(QString imagePath) {

@@ -4,9 +4,13 @@
 #include "ProjectData.h"
 
 #include <QDialog>
+#include <QGridLayout>
 #include <QStringList>
 #include <QDialogButtonBox>
 #include <QLabel>
+#include <QTimer>
+#include <QProgressBar>
+#include <QTextEdit>
 
 class QLineEdit;
 class QPushButton;
@@ -17,23 +21,30 @@ class ExportBase : public QDialog {
 
 public:
     ExportBase(ProjectData *data, QWidget *parent = nullptr);
-
     QString exportPath() const;
-    QStringList selectedTags() const;
+    void deleteFilesIfExist(QString dirPath, QString fileName);
+    void addLogMessage(const QString &message, const QColor &color = Qt::black);
+    void hideLog();
+    void showLog();
+
+    QGridLayout *layout;
+    ProjectData *data;
+    QProgressBar *progress;
 
 private slots:
     void openDirectoryDialog();
 
 private:
-    ProjectData * data;
     QDialogButtonBox *buttons;
     QLineEdit *pathEdit;
-    QLabel *errorLabel;
-    QListWidget *tagList;
+    QLabel *statusLabel;
+    QTimer *statusHideTimer;
+    QTextEdit *logView;
 
     void acceptExportHandler();
     void rejectExportHandler();
-    void showError(QString error);
+    void showStatus(QString error, QColor color = Qt::black, bool clear = false);
+    void hideStatus();
 
     virtual void exportAndSave();
 };

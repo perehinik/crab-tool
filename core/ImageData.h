@@ -21,6 +21,8 @@ public:
     void clear();
     void appendSelection(SelectionRect *rect);
     bool containsSelection(SelectionRect *rect);
+    void getSelectionsByTag(QString tag, QList<SelectionRect*> &selList);
+    QStringList tags();
 
     void addToScene(QGraphicsScene *scene);
     void deleteRect(SelectionRect *rect);
@@ -32,7 +34,7 @@ public:
     QString imageRelativePath;
     QString projectPath;
     QString hash;
-    QList<SelectionRect*> rectangleList;
+    QList<SelectionRect*> selectionList;
 
 private:
     qreal previousScale = 6;

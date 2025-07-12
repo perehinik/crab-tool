@@ -1,13 +1,11 @@
 #include "ExportBase.h"
 
-#include <QGridLayout>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QFileDialog>
 #include <QIcon>
-#include <QTimer>
 #include <QMessageBox>
 
 ExportBase::ExportBase(ProjectData *data, QWidget *parent)
@@ -16,7 +14,12 @@ ExportBase::ExportBase(ProjectData *data, QWidget *parent)
     setWindowTitle("Export");
     this->data = data;
 
-    QGridLayout *layout = new QGridLayout(this);
+    layout = new QGridLayout(this);
+
+    QWidget *pathWidget = new QWidget(this);
+    QHBoxLayout *pathWidgetLayout = new QHBoxLayout(pathWidget);
+    pathWidgetLayout->setContentsMargins(0, 0, 0, 0);
+    pathWidgetLayout->setSpacing(6);
 
     // Directory input and browse button
     pathEdit = new QLineEdit(this);
@@ -26,63 +29,99 @@ ExportBase::ExportBase(ProjectData *data, QWidget *parent)
     browseBtn->setIcon(QIcon(":/icon/folder-fill.png"));
     connect(browseBtn, &QPushButton::clicked, this, &ExportBase::openDirectoryDialog);
 
-    QPushButton *selectAllBtn = new QPushButton("Select All", this);
-    QPushButton *deselectAllBtn = new QPushButton("Deselect All", this);
+    pathWidgetLayout->addWidget(pathEdit);
+    pathWidgetLayout->addWidget(browseBtn);
 
-    tagList = new QListWidget(this);
+    statusLabel = new QLabel(this);
+    statusLabel->hide();
+    statusLabel->setAutoFillBackground(false);
+    // errorLabel->setStyleSheet("color: red; font-size: 11px;");
 
-    QStringList tags = data->allTags();
-    for (int i = 0; i < tags.length(); ++i) {
-        QListWidgetItem *item = new QListWidgetItem(tags[i], tagList);
-        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-        item->setCheckState(Qt::Unchecked);
-    }
-
-    connect(selectAllBtn, &QPushButton::clicked, this, [=]() {
-        for (int i = 0; i < tagList->count(); ++i)
-            tagList->item(i)->setCheckState(Qt::Checked);
+    statusHideTimer = new QTimer(this);
+    statusHideTimer->setSingleShot(true);
+    connect(statusHideTimer, &QTimer::timeout, this, [this]() {
+        statusLabel->hide();
     });
 
-    connect(deselectAllBtn, &QPushButton::clicked, this, [=]() {
-        for (int i = 0; i < tagList->count(); ++i)
-            tagList->item(i)->setCheckState(Qt::Unchecked);
-    });
+    progress = new QProgressBar(this);
+    progress->setRange(0, 100);
+    progress->setValue(0);
+    progress->hide();
 
-    errorLabel = new QLabel(this);
-    errorLabel->hide();
-    errorLabel->setStyleSheet("color: red; font-size: 11px;");
+    logView = new QTextEdit(this);
+    logView->setReadOnly(true);
+    logView->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);  // allow copy, disable edit
+    logView->setLineWrapMode(QTextEdit::NoWrap);
+    logView->setMaximumHeight(100);
+    logView->hide();
 
     buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(buttons, &QDialogButtonBox::accepted, this, &ExportBase::acceptExportHandler);
     connect(buttons, &QDialogButtonBox::rejected, this, &ExportBase::rejectExportHandler);
 
-    layout->addWidget(pathEdit, 0, 0, 1, 4);
-    layout->addWidget(browseBtn, 0, 4, 1, 1);
-    layout->addWidget(selectAllBtn, 2, 0, 1, 1);
-    layout->addWidget(deselectAllBtn, 2, 1, 1, 1);
-    layout->addWidget(tagList, 4, 0, 1, 5);
-    layout->addWidget(errorLabel, 6, 0, 1, 5);
-    layout->addWidget(buttons, 8, 2, 1, 2);
+    layout->addWidget(pathWidget, 0, 0, 1, 4);
+    layout->addWidget(logView, 18, 0, 1, 4);
+    layout->addWidget(statusLabel, 20, 0, 1, 4);
+    layout->addWidget(progress, 22, 0, 1, 4);
+    layout->addWidget(buttons, 24, 2, 1, 2);
 }
 
 void ExportBase::exportAndSave() {
     QMessageBox::information(this, "Notice", "Please implement /void exportAndSave()/.", QMessageBox::Cancel);
 }
 
-void ExportBase::showError(QString error) {
-    errorLabel->setText(error);
-    errorLabel->show();
-    QTimer::singleShot(2000, this, [this]() {
-        errorLabel->hide();
-    });
+void ExportBase::showLog() {
+    logView->show();
+}
+
+void ExportBase::hideLog() {
+    logView->hide();
+}
+
+void ExportBase::addLogMessage(const QString &message, const QColor &color) {
+    QTextCharFormat fmt;
+    fmt.setForeground(color);
+
+    QTextCursor cursor = logView->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    cursor.insertText(message + "\n", fmt);
+    logView->setTextCursor(cursor);
+
+    const int maxLines = 10000;
+    if (logView->document()->blockCount() > maxLines) {
+        QTextCursor cur(logView->document());
+        cur.movePosition(QTextCursor::Start);
+        for (int i = 0; i < logView->document()->blockCount() - maxLines; ++i) {
+            cur.select(QTextCursor::BlockUnderCursor);
+            cur.removeSelectedText();
+            cur.deleteChar();
+        }
+    }
+}
+
+void ExportBase::hideStatus() {
+    statusHideTimer->stop();
+    statusLabel->hide();
+}
+
+void ExportBase::showStatus(QString error, QColor color, bool clear) {
+    statusHideTimer->stop();
+    QPalette palette = statusLabel->palette();
+    palette.setColor(QPalette::WindowText, color);
+    statusLabel->setPalette(palette);
+    statusLabel->setText(error);
+    statusLabel->show();
+    if (clear) {
+        statusHideTimer->start(2000);
+    }
 }
 
 void ExportBase::acceptExportHandler() {
     if (QDir(pathEdit->text()).exists()) {
         exportAndSave();
-        this->accept();
+        // this->accept();
     } else {
-        showError("Directory doesn't exist !");
+        showStatus("Directory doesn't exist !", Qt::red, true);
     }
 }
 
@@ -98,20 +137,25 @@ void ExportBase::openDirectoryDialog() {
     );
     if (!dir.isEmpty()) {
         pathEdit->setText(dir);
+        addLogMessage("Selected export directory: " + dir);
+    }
+}
+
+void ExportBase::deleteFilesIfExist(QString dirPath, QString fileName) {
+    QDir dir(dirPath);
+    dir.setNameFilters({ fileName });
+    dir.setFilter(QDir::Files);
+
+    const QStringList files = dir.entryList();
+    for (int fileId = 0; fileId < files.length(); ++fileId) {
+        if (!QFile::remove(dir.filePath(files[fileId]))) {
+            addLogMessage("Failed to delete: " + files[fileId], Qt::yellow);
+        } else {
+            addLogMessage("Deleted: " + files[fileId]);
+        }
     }
 }
 
 QString ExportBase::exportPath() const {
     return pathEdit->text();
-}
-
-QStringList ExportBase::selectedTags() const {
-    QStringList selected;
-    for (int i = 0; i < tagList->count(); ++i) {
-        QListWidgetItem *item = tagList->item(i);
-        if (item->checkState() == Qt::Checked) {
-            selected << item->text();
-        }
-    }
-    return selected;
 }
