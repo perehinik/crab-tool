@@ -7,6 +7,7 @@
 
 #include "MainWindow.h"
 #include "ExportHaar.h"
+#include "ExportYolo.h"
 
 MainWindow::MainWindow(QWidget *parent): QMainWindow(parent) {
     projectData = new ProjectData();
@@ -98,8 +99,13 @@ void MainWindow::saveProjectClickHandler() {
 }
 
 void MainWindow::exportProject(const QString type) {
-    ExportHaar dialog(projectData, this);
-    dialog.exec();
+    if (type == "HAAR") {
+        ExportHaar dialog(projectData, this);
+        dialog.exec();
+    } else if (type == "YOLO") {
+        ExportYolo dialog(projectData, this);
+        dialog.exec();
+    }
 }
 
 void MainWindow::createProjectClickHandler() {
@@ -166,7 +172,7 @@ void MainWindow::onPathChanged(QString dirPath) {
 }
 
 void MainWindow::onImageClicked(QString imagePath) {
-    if (!QFile(imagePath).exists()) {
+    if (!QFile::exists(imagePath)) {
         return;
     }
     imageWidget->setImageData(projectData->getImageData(imagePath));

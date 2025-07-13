@@ -156,7 +156,7 @@ void ExportHaar::savePositive(QString tag, QString imgPath, QList<SelectionRect*
 
 void ExportHaar::saveNegative(QString tag, QString imgPath, QList<SelectionRect*> &selList) {
     QString imagePath = QDir(data->projectDir()).absoluteFilePath(imgPath);
-    if (!QFile(imagePath).exists()) {
+    if (!QFile::exists(imagePath)) {
         addLogMessage("File doesn't exist: " + imagePath, Qt::red);
         return;
     }

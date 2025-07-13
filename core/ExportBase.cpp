@@ -160,6 +160,18 @@ void ExportBase::deleteFilesIfExist(QString dirPath, QString fileName) {
     }
 }
 
+void ExportBase::saveTextToFile(QString filePath, QString text) {
+    QFile file(filePath);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QTextStream out(&file);
+        out << text;
+        file.close();
+    } else {
+        addLogMessage("Cannot open file for writing: " + filePath, Qt::red);
+        addLogMessage(file.errorString(), Qt::red);
+    }
+}
+
 void ExportBase::appendTextToFile(QString filePath, QString text) {
     QFile file(filePath);
     if (file.open(QIODevice::Append | QIODevice::Text)) {

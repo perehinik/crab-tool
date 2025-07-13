@@ -9,6 +9,15 @@
 
 #define PIXMAP_MAX_SIDE_SIZE 300
 
+class SlowScrollListView : public QListView {
+    Q_OBJECT
+public:
+    using QListView::QListView;
+
+protected:
+    void wheelEvent(QWheelEvent *event) override;
+};
+
 class ImageNavigatorWidget : public QWidget {
     Q_OBJECT
 

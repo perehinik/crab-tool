@@ -2,10 +2,22 @@
 #include <QFileSystemModel>
 #include <QThreadPool>
 #include <QImageReader>
+#include <QWheelEvent>
+#include <QScrollBar>
 
 #include "Constants.h"
 #include "ImageItemDelegate.h"
 #include "ImageNavigatorWidget.h"
+
+void SlowScrollListView::wheelEvent(QWheelEvent *event) {
+    int delta = event->angleDelta().y();
+    int scaledDelta = delta / 3;
+
+    if (verticalScrollBar()) {
+        verticalScrollBar()->setValue(verticalScrollBar()->value() - scaledDelta);
+    }
+    event->accept();
+}
 
 ImageNavigatorWidget::ImageNavigatorWidget(QWidget *parent) : QWidget(parent) {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -16,7 +28,7 @@ ImageNavigatorWidget::ImageNavigatorWidget(QWidget *parent) : QWidget(parent) {
     model = new ImageListModel(this);
     model->defaultPixmap = QPixmap(":/icon/image-wide.png");
 
-    view = new QListView(this);
+    view = new SlowScrollListView(this);
     view->setModel(model);
     view->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     view->setItemDelegate(new ImageItemDelegate(view));
@@ -28,7 +40,7 @@ ImageNavigatorWidget::ImageNavigatorWidget(QWidget *parent) : QWidget(parent) {
     view->setSelectionMode(QAbstractItemView::SingleSelection);
     view->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    connect(view, &QListView::clicked, this, &ImageNavigatorWidget::onImageItemClicked);
+    connect(view->selectionModel(), &QItemSelectionModel::currentChanged, this, &ImageNavigatorWidget::onImageItemClicked);
 
     mainLayout->addWidget(view);
     mainLayout->setContentsMargins(0, 0, 0, 0);

@@ -37,8 +37,10 @@ ToolboxWidget::ToolboxWidget(QWidget *parent) : QWidget(parent) {
     QMenu *exportMenu = new QMenu("Export As", this);
     exportMenu->setIcon(QIcon(":/icon/export.png"));
 
-    QAction *exportHaarAction = exportMenu->addAction("Haar descriptor");
+    QAction *exportHaarAction = exportMenu->addAction("Haar");
     connect(exportHaarAction, &QAction::triggered, this, [this]() { emit onExportProject("HAAR"); });
+    QAction *exportYoloAction = exportMenu->addAction("Yolo");
+    connect(exportYoloAction, &QAction::triggered, this, [this]() { emit onExportProject("YOLO"); });
 
     menuBar = new QMenuBar(this);
     QMenu *fileMenu = menuBar->addMenu("File");

@@ -42,6 +42,7 @@ QSize ImageItemDelegate::sizeHint(const QStyleOptionViewItem &option, const QMod
     qreal scalingFactor = pixmap.width() / ( parentView->width() * 0.7 );
     int imageHeight = (qreal)pixmap.height() / scalingFactor;
     int width = parentView->width();  // Full width of QListView
-    int height = imageHeight + 30;  // image height + text
+    int height = imageHeight + 30;    // image height + text
+    height = height < 100 ? 100 : height;
     return QSize(width, height);
 }
