@@ -78,6 +78,10 @@ void ExportBase::hideLog() {
     logView->hide();
 }
 
+void ExportBase::clearLog() {
+    logView->clear();
+}
+
 void ExportBase::addLogMessage(const QString &message, const QColor &color) {
     QTextCharFormat fmt;
     fmt.setForeground(color);
@@ -153,6 +157,18 @@ void ExportBase::deleteFilesIfExist(QString dirPath, QString fileName) {
         } else {
             addLogMessage("Deleted: " + files[fileId]);
         }
+    }
+}
+
+void ExportBase::appendTextToFile(QString filePath, QString text) {
+    QFile file(filePath);
+    if (file.open(QIODevice::Append | QIODevice::Text)) {
+        QTextStream out(&file);
+        out << text;
+        file.close();
+    } else {
+        addLogMessage("Cannot open file for writing: " + filePath, Qt::red);
+        addLogMessage(file.errorString(), Qt::red);
     }
 }
 

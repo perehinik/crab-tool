@@ -16,6 +16,8 @@ ExportHaar::ExportHaar(ProjectData *data, QWidget *parent)
     setWindowTitle("Export Haar descriptor");
     QStringList tags = data->allTags();
 
+    exportThreadPool = new QThreadPool(this);
+
     // Positives
     QPushButton *selectAllBtnPositives = new QPushButton("Select All", this);
     QPushButton *deselectAllBtnPositives = new QPushButton("Deselect All", this);
@@ -90,6 +92,7 @@ QStringList ExportHaar::selectedTagsNegative() const {
 
 void ExportHaar::exportAndSave() {
     showLog();
+    clearLog();
     progress->setValue(0);
     progress->show();
     const QStringList positives = selectedTagsPositive();
@@ -106,24 +109,31 @@ void ExportHaar::exportAndSave() {
     for (int i = 0; i < keys.length(); ++i) {
         ImageData *imgData = data->getImageDataById(keys[i]);
         addLogMessage(QString("Export: %1").arg(imgData->imageRelativePath));
-        exportPositives(imgData, positives);
-        exportNegatives(imgData, negatives);
+
+        exportImageData(imgData, positives, negatives);
         progress->setValue((float)i / ((float)keys.length() / 100.0));
     }
+    exportThreadPool->waitForDone();
     progress->setValue(100);
     addLogMessage("\n\nSUCCESS !!!", Qt::green);
 }
 
-void ExportHaar::exportPositives(ImageData *imgData, const QStringList &positives) {
+void ExportHaar::exportImageData(ImageData *imgData, const QStringList &positives, const QStringList &negatives) {
     QList<SelectionRect*> selList;
     const QStringList tags = imgData->tags();
+
     for (int i = 0; i < tags.length(); i++) {
-        if (!positives.contains(tags[i])) {
+        bool savePos = positives.contains(tags[i]);
+        bool saveNeg = negatives.contains(tags[i]);
+        if (!saveNeg && !savePos) {
             continue;
         }
         imgData->getSelectionsByTag(tags[i], selList);
-        if (!selList.isEmpty()) {
+        if (!selList.isEmpty() && savePos) {
             savePositive(tags[i], imgData->imageRelativePath, selList);
+        }
+        if (!selList.isEmpty() && saveNeg) {
+            saveNegative(tags[i], imgData->imageRelativePath, selList);
         }
     }
 }
@@ -141,29 +151,7 @@ void ExportHaar::savePositive(QString tag, QString imgPath, QList<SelectionRect*
     }
     QString haarFile = QDir(exportPath()).filePath(QString("haar-%1.txt").arg(tag));
 
-    QFile file(haarFile);
-    if (file.open(QIODevice::Append | QIODevice::Text)) {
-        QTextStream out(&file);
-        out << haarLine << "\n";
-        file.close();
-    } else {
-        addLogMessage("Cannot open file for writing: " + haarFile, Qt::red);
-        addLogMessage(file.errorString(), Qt::red);
-    }
-}
-
-void ExportHaar::exportNegatives(ImageData *imgData, const QStringList &negatives) {
-    QList<SelectionRect*> selList;
-    const QStringList tags = imgData->tags();
-    for (int i = 0; i < tags.length(); i++) {
-        if (!negatives.contains(tags[i])) {
-            continue;
-        }
-        imgData->getSelectionsByTag(tags[i], selList);
-        if (!selList.isEmpty()) {
-            saveNegative(tags[i], imgData->imageRelativePath, selList);
-        }
-    }
+    appendTextToFile(haarFile, haarLine + "\n");
 }
 
 void ExportHaar::saveNegative(QString tag, QString imgPath, QList<SelectionRect*> &selList) {
@@ -172,8 +160,8 @@ void ExportHaar::saveNegative(QString tag, QString imgPath, QList<SelectionRect*
         addLogMessage("File doesn't exist: " + imagePath, Qt::red);
         return;
     }
-    QString haarLines = "";
     QList<QRect> rectList;
+    QString haarFile = QDir(exportPath()).filePath(QString("haar-n-%1.txt").arg(tag));
 
     for (int selId = 0; selId < selList.length(); ++selId) {
         QRectF cropRect = selList[selId]->getRect();
@@ -184,43 +172,43 @@ void ExportHaar::saveNegative(QString tag, QString imgPath, QList<SelectionRect*
         // If there is at least 1 selection that selects more than 99% of image -> just use the whole image.
         // In most cases it should be done like that - for better efficiency.
         if (w_diff <= 0.01 * (float)imageSize.width() && h_diff <= 0.01 * (float)imageSize.height()) {
-            haarLines = QDir(exportPath()).relativeFilePath(imagePath) + "\n";
+            QString haarLines = QDir(exportPath()).relativeFilePath(imagePath) + "\n";
+            appendTextToFile(haarFile, haarLines);
             rectList.clear();
             break;
         }
         rectList.append(cropRect.toRect());
     }
 
+    // In case we actually need to crop image - do it in separate thread
     if (!rectList.empty()) {
-        QFileInfo imgFileileInfo(imgPath);
-        QString negativeSavePath = QDir(exportPath()).filePath("negative");
-        QString copyPath = QDir(negativeSavePath).absoluteFilePath(imgFileileInfo.path());
-        QImage original(imagePath);
-
-        QDir().mkpath(copyPath);
-
-        for (int rectId = 0; rectId < rectList.length(); ++rectId) {
-            QString copyFile = QDir(copyPath).filePath(QString("%1-%2-%3").arg(tag).arg(rectId).arg(imgFileileInfo.fileName()));
-
-            if (!original.isNull() && rectList[rectId].isValid() && original.rect().contains(rectList[rectId])) {
-                QImage cropped = original.copy(rectList[rectId]);
-                cropped.save(copyFile);
-                haarLines += QDir(exportPath()).relativeFilePath(copyFile) + "\n";
-            } else {
-                addLogMessage("Invalid crop area or image " + tag + " " + imagePath, Qt::yellow);
-            }
+        while (exportThreadPool->activeThreadCount() >= 16) {
+            // For proper process bar visualization
+            QThread::msleep(50);
         }
-    }
+        exportThreadPool->start([=]() {
+            QFileInfo imgFileileInfo(imgPath);
+            QString negativeSavePath = QDir(exportPath()).filePath("negative");
+            QString copyPath = QDir(negativeSavePath).absoluteFilePath(imgFileileInfo.path());
+            QImage original(imagePath);
+            QString haarLinesLocal = "";
 
-    QString haarFile = QDir(exportPath()).filePath(QString("haar-n-%1.txt").arg(tag));
+            QDir().mkpath(copyPath);
 
-    QFile file(haarFile);
-    if (file.open(QIODevice::Append | QIODevice::Text)) {
-        QTextStream out(&file);
-        out << haarLines;
-        file.close();
-    } else {
-        addLogMessage("Cannot open file for writing: " + haarFile, Qt::red);
-        addLogMessage(file.errorString(), Qt::red);
+            for (int rectId = 0; rectId < rectList.length(); ++rectId) {
+                QString copyFile = QDir(copyPath).filePath(QString("%1-%2-%3").arg(tag).arg(rectId).arg(imgFileileInfo.fileName()));
+
+                if (!original.isNull() && rectList[rectId].isValid() && original.rect().contains(rectList[rectId])) {
+                    QImage cropped = original.copy(rectList[rectId]);
+                    cropped.save(copyFile);
+                    haarLinesLocal += QDir(exportPath()).relativeFilePath(copyFile) + "\n";
+                } else {
+                    addLogMessage("Invalid crop area or image " + tag + " " + imagePath, Qt::yellow);
+                }
+            }
+            // Make sure noone else tries to write to same file.
+            QMutexLocker locker(&fileWriteMutex);
+            appendTextToFile(haarFile, haarLinesLocal);
+        });
     }
 }

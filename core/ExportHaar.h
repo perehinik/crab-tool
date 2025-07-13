@@ -2,6 +2,8 @@
 #define EXPORTHAAR_H
 
 #include "ExportBase.h"
+#include <QThreadPool>
+#include <QMutex>
 
 class ExportHaar : public ExportBase {
     Q_OBJECT
@@ -11,8 +13,7 @@ public:
 
 private:
     void exportAndSave() override;
-    void exportPositives(ImageData *imgData, const QStringList &positives);
-    void exportNegatives(ImageData *imgData, const QStringList &negatives);
+    void exportImageData(ImageData *imgData, const QStringList &positives, const QStringList &negatives);
     void savePositive(QString tag, QString imgPath, QList<SelectionRect*> &selList);
     void saveNegative(QString tag, QString imgPath, QList<SelectionRect*> &selList);
 
@@ -20,6 +21,8 @@ private:
     QListWidget *tagListNegatives;
     QStringList selectedTagsPositive() const;
     QStringList selectedTagsNegative() const;
+    QThreadPool *exportThreadPool;
+    QMutex fileWriteMutex;
 };
 
 #endif // EXPORTHAAR_H

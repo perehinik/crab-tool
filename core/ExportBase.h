@@ -24,8 +24,10 @@ public:
     QString exportPath() const;
     void deleteFilesIfExist(QString dirPath, QString fileName);
     void addLogMessage(const QString &message, const QColor &color = Qt::black);
+    void appendTextToFile(QString filePath, QString text);
     void hideLog();
     void showLog();
+    void clearLog();
 
     QGridLayout *layout;
     ProjectData *data;
