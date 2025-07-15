@@ -23,6 +23,7 @@ if(WIN32)
     )
 
     set(QT_BASE_PATH "C:/Qt/${QT_VERSION_FOUND}/mingw_64")
+    set(QT_PLUGINS_PATH "C:/Qt/${QT_VERSION_FOUND}/mingw_64/plugins")
     set(QT_CMAKE_PATH "${QT_BASE_PATH}/lib/cmake")
 
     message(STATUS "Detected Qt version: ${QT_VERSION_FOUND}")
@@ -105,10 +106,20 @@ set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "CrabTool - Lightweight image tagging tool")
 
 if(WIN32)
-    set(CPACK_GENERATOR "NSIS")
+    set(CPACK_GENERATOR "NSIS;ZIP")
     set(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_NAME}")
     set(CPACK_NSIS_CONTACT "${CPACK_PACKAGE_CONTACT}")
     set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/icon/crab.ico")
+
+    install(TARGETS crab-tool RUNTIME DESTINATION . )
+    install(DIRECTORY "${CMAKE_BINARY_DIR}/bin/" DESTINATION . FILES_MATCHING PATTERN "*.dll")
+
+    # Install plugins
+    install(DIRECTORY "${QT_PLUGINS_PATH}/platforms"        DESTINATION .)
+    install(DIRECTORY "${QT_PLUGINS_PATH}/imageformats"     DESTINATION .)
+
+    install(PROGRAMS "${CMAKE_SOURCE_DIR}/LICENSE" DESTINATION .)
+
 elseif(UNIX AND NOT APPLE)
     set(CPACK_GENERATOR "DEB;TGZ")
 

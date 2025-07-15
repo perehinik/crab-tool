@@ -59,13 +59,16 @@ $exePath = Join-Path $buildDir $exeName
 
 # Run windeployqt to copy required Qt DLLs
 Write-Host "Copy DLLs using windeployqt"
-& $windeployqt --dir $buildDir $exePath
+& $windeployqt --dir $buildDir/bin $exePath
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # Package the app using CPack
 Write-Host "Create package using CPack"
 Push-Location $buildDir
 cpack
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if ($LASTEXITCODE -ne 0) {
+    Pop-Location
+    exit $LASTEXITCODE
+}
 Pop-Location
 
