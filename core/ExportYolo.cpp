@@ -13,7 +13,7 @@
 ExportYolo::ExportYolo(ProjectData *data, QWidget *parent)
     : ExportBase(data, parent)
 {
-    setWindowTitle("Export Haar descriptor");
+    setWindowTitle("Export YOLO dataset");
     QStringList tags = data->allTags();
     QPushButton *selectAllBtn = new QPushButton("Select All", this);
     QPushButton *deselectAllBtn = new QPushButton("Deselect All", this);

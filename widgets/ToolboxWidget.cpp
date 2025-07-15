@@ -39,7 +39,7 @@ ToolboxWidget::ToolboxWidget(QWidget *parent) : QWidget(parent) {
 
     QAction *exportHaarAction = exportMenu->addAction("Haar");
     connect(exportHaarAction, &QAction::triggered, this, [this]() { emit onExportProject("HAAR"); });
-    QAction *exportYoloAction = exportMenu->addAction("Yolo");
+    QAction *exportYoloAction = exportMenu->addAction("YOLO");
     connect(exportYoloAction, &QAction::triggered, this, [this]() { emit onExportProject("YOLO"); });
 
     menuBar = new QMenuBar(this);
