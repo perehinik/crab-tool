@@ -9,8 +9,27 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# This allows building from script
-if(UNIX AND NOT APPLE)
+if(WIN32)
+    execute_process(
+        COMMAND powershell -Command "& {
+            Get-ChildItem 'C:\\Qt' -Directory |
+            Where-Object { $_.Name -match '^6\\.' } |
+            Sort-Object Name -Descending |
+            Select-Object -First 1 |
+            ForEach-Object { $_.Name }
+        }"
+        OUTPUT_VARIABLE QT_VERSION_FOUND
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    set(QT_BASE_PATH "C:/Qt/${QT_VERSION_FOUND}/mingw_64")
+    set(QT_CMAKE_PATH "${QT_BASE_PATH}/lib/cmake")
+
+    message(STATUS "Detected Qt version: ${QT_VERSION_FOUND}")
+    message(STATUS "Using Qt CMake path: ${QT_CMAKE_PATH}")
+
+    set(CMAKE_PREFIX_PATH "${QT_CMAKE_PATH}")
+elseif(UNIX AND NOT APPLE)
     execute_process(
         COMMAND bash -c "ls $ENV{HOME}/Qt | grep '^6\\.' | sort -V | tail -n 1"
         OUTPUT_VARIABLE QT_VERSION_FOUND
