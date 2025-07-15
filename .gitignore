@@ -28,7 +28,6 @@ ui_*.h
 *.qmlc
 *.jsc
 Makefile*
-*build-*
 *.qm
 *.prl
 
@@ -37,6 +36,7 @@ target_wrapper.*
 
 # QtCreator
 *.autosave
+.qtcreator/
 
 # QtCreator Qml
 *.qmlproject.user
@@ -52,3 +52,6 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+output/
+build/

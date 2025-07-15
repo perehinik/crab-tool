@@ -1,0 +1,22 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icon/image-wide.png</file>
+        <file>icon/image-broken-wide.png</file>
+        <file>icon/folder-fill.png</file>
+        <file>icon/drag.png</file>
+        <file>icon/zoom-to-extents.png</file>
+        <file>icon/zoom-out.png</file>
+        <file>icon/zoom-in.png</file>
+        <file>icon/save.png</file>
+        <file>icon/landscape.png</file>
+        <file>icon/picture.png</file>
+        <file>icon/delete.png</file>
+        <file>icon/project-file.png</file>
+        <file>icon/images.png</file>
+        <file>icon/info.png</file>
+        <file>icon/export.png</file>
+        <file>icon/crab-small.png</file>
+        <file>icon/crab-big.png</file>
+        <file>icon/project-file-open.png</file>
+    </qresource>
+</RCC>
